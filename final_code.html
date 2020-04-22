@@ -371,9 +371,35 @@ summary {
 
 <div id="presidential-election-results-by-county-2000-2016" class="section level2">
 <h2>Presidential Election Results by County 2000-2016</h2>
+<pre class="r"><code>pres_results &lt;- read.csv(&quot;raw_data/countypres_2000-2016.csv&quot;) %&gt;%
+  clean_names()</code></pre>
 </div>
 <div id="american-community-surveys-2014-2018-5-year-estimates" class="section level2">
 <h2>American Community Surveys 2014-2018 (5-Year Estimates)</h2>
+<pre class="r"><code>acs &lt;- read.csv(&quot;raw_data/acs_5ye.csv&quot;) %&gt;%
+  clean_names()</code></pre>
+</div>
+<div id="health-data-2016" class="section level2">
+<h2>Health Data (2016)</h2>
+<pre class="r"><code>health &lt;- read.csv(&quot;raw_data/health_data_2016.csv&quot;) %&gt;%
+  clean_names()</code></pre>
+</div>
+<div id="state-education-data-2018" class="section level2">
+<h2>State Education Data 2018</h2>
+<pre class="r"><code>education &lt;- read.csv(&quot;raw_data/state_education_data_2018.csv&quot;) %&gt;%
+  clean_names()</code></pre>
+</div>
+<div id="family-voting-registration-by-age-and-income-2016" class="section level2">
+<h2>Family Voting Registration by Age and Income 2016</h2>
+<pre class="r"><code>age_income_2016 &lt;- read_excel(&quot;raw_data/family_voting_registration_by_age_and_income_2016.xlsx&quot;) %&gt;%
+  clean_names()</code></pre>
+<pre><code>## New names:
+## * `` -&gt; ...2
+## * `` -&gt; ...3
+## * `` -&gt; ...4
+## * `` -&gt; ...5
+## * `` -&gt; ...6
+## * ... and 12 more problems</code></pre>
 </div>
 
 

@@ -19,7 +19,8 @@ library(markdown)
 ## Presidential Election Results by County 2000-2016
 
 ```{r}
-
+pres_results <- read.csv("raw_data/countypres_2000-2016.csv") %>%
+  clean_names()
 
 
 
@@ -28,13 +29,43 @@ library(markdown)
 ## American Community Surveys 2014-2018 (5-Year Estimates)
 
 ```{r}
+acs <- read.csv("raw_data/acs_5ye.csv") %>%
+  clean_names()
 
+
+```
+
+## Health Data (2016)
+
+```{r}
+health <- read.csv("raw_data/health_data_2016.csv") %>%
+  clean_names()
 
 
 
 ```
 
+## State Education Data 2018
 
+```{r}
+
+education <- read.csv("raw_data/state_education_data_2018.csv") %>%
+  clean_names()
+
+
+```
+
+## Family Voting Registration by Age and Income 2016
+
+```{r}
+
+age_income_2016 <- read_excel("raw_data/family_voting_registration_by_age_and_income_2016.xlsx") %>%
+  clean_names()
+
+
+
+
+```
 
 
 
