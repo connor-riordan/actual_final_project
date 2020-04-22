@@ -20,8 +20,19 @@ library(markdown)
 
 ```{r}
 pres_results <- read.csv("raw_data/countypres_2000-2016.csv") %>%
-  clean_names()
+  clean_names() %>%
+  select(! version)
 
+pres_results <- pres_results %>%
+  mutate(abb_county = paste0(county, ", ", state_po))
+
+dat <- pres_results %>%
+  filter(county == "Autauga" | county == "Baldwin")
+
+dat %>%
+  filter(year == 2000) %>%
+  ggplot(aes(candidate, candidatevotes, fill = county)) + 
+  geom_bar(stat = "identity", position = position_dodge())
 
 
 ```

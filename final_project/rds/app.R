@@ -3,10 +3,13 @@
 library(shiny)
 library(tidyverse)
 library(markdown)
+library(ggplot2)
 
 
 
 pres_res <- readRDS("pres_results.RDS")
+
+presasvector <- pres_res$abb_county %>% unique()
     
 options(scipen = 999)
 
@@ -22,7 +25,7 @@ ui <- navbarPage(
                      helpText("Examine Presidential Election Data."),
                      
                      fluidRow(selectInput("year", "Choose a year:", choices = pres_res$year),
-                              selectInput("county", "Choose a county:", choices = pres_res$county),
+                              selectizeInput("county", "Choose a county:", choices = presasvector, options = list("actions-box" = TRUE), multiple = TRUE),
                               selectInput("y_var", "Choose what you want to measure:", choices = c(colnames(pres_res)[-c(1:6)]))
                               )),
                  
@@ -48,20 +51,13 @@ ui <- navbarPage(
 
 server <- function(input, output) {
     output$voting_data <- renderPlot({
-        # w <- pres_res[pres_res$year == input$year]
-        x <- seq(1, nrow(pres_res[pres_res$county == input$county, ]), 1)
-        y <- pres_res[pres_res$county == input$county, input$y_var]
-        dat <- as.data.frame(cbind(x, y))
-        dat %>%
-            # filter(year == w) %>%
-            ggplot(aes(x, y)) + 
-            scale_x_discrete(name = 'county',
-                             breaks = x,
-                             labels = paste(x),
-                             limits = x) + 
-            geom_bar(stat = "identity") + theme_classic() + labs(
-                title = "Presidential Election Data"
-            )
+        pres_res %>%
+            filter(abb_county %in% input$county) %>%
+            filter(year == input$year) %>%
+            ggplot(aes(candidate, candidatevotes, fill = county)) + 
+            geom_bar(stat = "identity", position = position_dodge()) +
+            ggtitle(paste("Presidential Election Results by County, Year = ",input$year))
+        
     })
 }
 

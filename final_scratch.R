@@ -1,6 +1,10 @@
 
 pres_results <- read.csv("raw_data/countypres_2000-2016.csv") %>%
-  clean_names()
+  clean_names() %>%
+  select(! version)
+
+pres_results <- pres_results %>%
+  mutate(abb_county = paste0(county, ", ", state_po))
 
 saveRDS(object = pres_results, file = "final_project/rds/pres_results.RDS")
 
@@ -51,3 +55,4 @@ age_income_2016 <- age_income_2016 %>%
   )
 
 saveRDS(object = age_income_2016, file = "final_project/rds/age_income_2016.RDS")
+
