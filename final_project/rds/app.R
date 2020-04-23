@@ -79,7 +79,7 @@ ui <- navbarPage(
                         
                          helpText("Examine Income Data."),
                     
-                         fluidRow(selectizeInput("age", "Choose an age group:", choices = c(ai_18_over = "18+", ai_18_24 = "18-24", ai_25_44 = "25-44", ai_45_64 = "45-64", ai_65_74 = "65-74", ai_75_over = "75+"), options = list("actions-box" = TRUE), multiple = TRUE))),
+                         fluidRow(selectizeInput("age", "Choose an age group:", choices = c(`Aged 18 or older` = "ai_18_over", ai_18_24 = "ai_18_24", ai_25_44 = "ai_25_44", ai_45_64 = "ai_45_64", ai_65_74 = "ai_65_74", ai_75_over = "ai_75_over"), options = list("actions-box" = TRUE), multiple = TRUE))),
                 
                  mainPanel(
                      
@@ -150,7 +150,7 @@ server <- function(input, output) {
     output$lpd <- renderPlot({
         pres_res %>%
             
-            filter(abb_county %in% input$abb_county) %>%
+            filter(abb_county %in% input$county) %>%
             
             ggplot(aes(year, totalvotes, fill = abb_county)) +
             
@@ -158,24 +158,40 @@ server <- function(input, output) {
     })
     
     output$income <- renderPlot({
-        if(input$age == "ai_18_over"){
+        
+        test <- get(input$age)
+        test  %>% 
             
-          ai_18_over %>% 
-                
-                ggplot(aes(total_income, reported_voted)) +
-                
-                geom_bar(stat = "identity", position = position_dodge())
-        } 
+            ggplot(aes(total_income, reported_voted)) +
+            
+            geom_bar(stat = "identity", position = position_dodge())
+        
+        #if(input$age == "18+"){
+        #    
+        #    ai_18_over %>% 
+        #        
+        #        ggplot(aes(total_income, reported_voted)) +
+        #        
+        #        geom_bar(stat = "identity", position = position_dodge())
+        #} 
     })
     
     output$education <- renderPlot({
         
+        #education %>% 
+        #    
+        #    filter(qualifying_name %in% input$state) %>%
+        #        
+        #    ggplot(aes(qualifying_name, get(input$y_var))) +
+        #        
+        #    geom_bar(stat = "identity", position = position_dodge())
+        
         education %>% 
             
-            filter(abb_county %in% input$county) %>%
-                
-            ggplot(aes(input$state, input$y_var)) +
-                
+            filter(qualifying_name %in% input$state) %>%
+            
+            ggplot(aes(qualifying_name, get(input$`y-var`))) +
+            
             geom_bar(stat = "identity", position = position_dodge())
         
     })

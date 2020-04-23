@@ -36,12 +36,44 @@ dat %>%
   geom_bar(stat = "identity", position = position_dodge())
 
 us_counties <- map_data("county")
-  
+
 us_counties
 
 pres_results$region <- tolower(pres_results$state)
 
-# left_join(us_counties, pres_results)
+newdata <- vector()
+for(i in unique(pres_results$state)){
+  sub <- pres_results[pres_results$state == i, ]
+  for(j in unique(sub$county)){
+    sub2 <- sub[sub$county == j, ]
+    sub2$candidate <- paste(gsub(' ', '_', sub2$candidate), sub2$year, sep = '_')
+    out <- sub2$candidatevotes
+    out <- c(i, j, sub2$candidatevotes)
+    names(out) <- c('state', 'county', sub2$candidate)
+    newdata <- rbind(newdata, out)
+  }
+}
+
+newdata <- as.data.frame(newdata)
+newdata[, 1:2] <- apply(newdata[, 1:2], 2, tolower)
+
+colnames(us_counties)[5:6] <- c('state', 'county')
+
+new_counties <- vector()
+
+for(i in unique(us_counties$state)){
+  sub <- us_counties[us_counties$state == i, ]
+  for(j in unique(sub$county)){
+    sub2 <- sub[sub$county == j, c(1:4)]
+    out <- c(i, j, as.list(sub2))
+    new_counties <- rbind(new_counties, out)
+  }
+}
+
+new_counties <- as.data.frame(new_counties)
+colnames(new_counties)[1:2] <- c('state', 'county')
+
+newtest <- merge.data.frame(newdata, new_counties, by = c('state', 'county'))
 ```
 
 ## American Community Surveys 2014-2018 (5-Year Estimates)
