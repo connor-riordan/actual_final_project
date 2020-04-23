@@ -27,12 +27,16 @@ pres_results <- pres_results %>%
   mutate(abb_county = paste0(county, ", ", state_po))
 
 dat <- pres_results %>%
-  filter(county == "Autauga" | county == "Baldwin")
+  filter(abb_county == "Autauga, AL" | abb_county == "Baldwin, AL")
 
 dat %>%
   filter(year == 2000) %>%
-  ggplot(aes(candidate, candidatevotes, fill = county)) + 
+  ggplot(aes(candidate, candidatevotes, fill = abb_county)) + 
   geom_bar(stat = "identity", position = position_dodge())
+
+dat %>%
+  ggplot(aes(year, totalvotes, color = abb_county)) +
+  geom_line(stat = "identity")
 
 
 ```

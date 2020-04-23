@@ -19,45 +19,90 @@ ui <- navbarPage(
     "How Separate Variables Affect Voting Patterns",
     
     tabPanel("Presidential Election Data Since 2000",
+             
              fluidPage(
+                 
                  sidebarLayout(
-                 sidebarPanel(
-                     helpText("Examine Presidential Election Data."),
+                 
+                     sidebarPanel(
+                     
+                         helpText("Examine Presidential Election Data."),
                      
                      fluidRow(selectInput("year", "Choose a year:", choices = pres_res$year),
+                              
                               selectizeInput("county", "Choose a county:", choices = presasvector, options = list("actions-box" = TRUE), multiple = TRUE),
+                              
                               selectInput("y_var", "Choose what you want to measure:", choices = c(colnames(pres_res)[-c(1:6)]))
+                              
                               )),
                  
                  mainPanel(
+                     
                      plotOutput("voting_data"),
+                     
                      br(), br(),
+                     
                      tableOutput("results")))
     )),
+   
+    tabPanel("Linear Presidential Election Data by County",
+            fluidPage(
+                sidebarLayout(
+                    sidebarPanel(
+                        helpText("Examine Linear Presidential Election Data."),
+                    fluidRow(selectizeInput("county", "Choose a county:", choices = presasvector, options = list("actions-box" = TRUE), multiple = TRUE))),
+                mainPanel(
+                    plotOutput("lpd"),
+                    br(), br(),
+                    tableOutput("results2"))
+                    )
+            )
+    ),
     
     tabPanel("Running Regressions and Discussion",
+             
              titlePanel("Discussion Title"),
+             
              p("Tour of the modeling choices you made and 
               an explanation of why you made them")),
     
     tabPanel("About",
+             
              titlePanel("About"),
+             
              h3("Project Background and Motivations"),
+             
              p("I think that, now more than ever, it is important to understand how and why voting patterns occur. While none of this is new information, and it may be intuitive for some, it is still important to lay it out in an easily digestible form so people of every background can understand the severity of the situation we face in this country."),
+             
              h3("About Me"),
+             
              p("My name is Connor Riordan and I am looking to study Government and TDM. 
              You can reach me at criordan@college.harvard.edu."))
 )
 
 server <- function(input, output) {
+    
     output$voting_data <- renderPlot({
+        
         pres_res %>%
+            
             filter(abb_county %in% input$county) %>%
+            
             filter(year == input$year) %>%
+            
             ggplot(aes(candidate, candidatevotes, fill = county)) + 
+            
             geom_bar(stat = "identity", position = position_dodge()) +
+            
             ggtitle(paste("Presidential Election Results by County, Year = ",input$year))
         
+    })
+    
+    output$lpd <- renderPlot({
+        pres_res %>%
+            filter(abb_county %in% input$abb_county) %>%
+            ggplot(aes(year, totalvotes, fill = abb_county)) +
+            geom_line(stat = "identity", position = position_dodge())
     })
 }
 
