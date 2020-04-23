@@ -25,6 +25,10 @@ ai_65_74 <- readRDS("age_income_2016_65_74.RDS")
 
 ai_75_over <- readRDS("age_income_2016_75_over.RDS")
 
+education <- readRDS("education.RDS")
+
+edasvector <- education$name_of_area %>% unique()
+
 options(scipen = 999)
 
 
@@ -88,6 +92,22 @@ ui <- navbarPage(
             )
     ),
     
+    tabPanel("Education Data",
+        fluidPage(
+            sidebarLayout(
+                helpText("Examine Education Data."),
+                fluidRow(selectizeInput("state", "Choose a sate:", choices = edasvector, options = list("actions-box" = TRUE), multiple = TRUE),
+                         selectInput("y-var", "Choose a variable to measure:", choices = c(colnames(education)[-c(1:2)]))),
+            ),
+            mainPanel(
+                plotOutput("education"),
+                br(), br(),
+                tableOutput("results4")
+            )
+        )
+    ),
+    
+    
     tabPanel("Running Regressions and Discussion",
              
              titlePanel("Discussion Title"),
@@ -140,12 +160,24 @@ server <- function(input, output) {
     output$income <- renderPlot({
         if(input$age == "ai_18_over"){
             
-          renderPlot(ai_18_over %>% 
+          ai_18_over %>% 
                 
                 ggplot(aes(total_income, reported_voted)) +
                 
-                geom_bar(stat = "identity", position = position_dodge()))
+                geom_bar(stat = "identity", position = position_dodge())
         } 
+    })
+    
+    output$education <- renderPlot({
+        
+        education %>% 
+            
+            filter(abb_county %in% input$county) %>%
+                
+            ggplot(aes(input$state, input$y_var)) +
+                
+            geom_bar(stat = "identity", position = position_dodge())
+        
     })
 }
 

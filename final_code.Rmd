@@ -74,6 +74,21 @@ education <- read.csv("raw_data/state_education_data_2018.csv") %>%
   clean_names() %>%
   select(! 3:7)
 
+# sapply(education, numeric)
+
+education$school_digger_number_of_stars_elementary <- as.numeric(education$school_digger_number_of_stars_elementary)
+education$school_digger_number_of_stars_high <- as.numeric(education$school_digger_number_of_stars_high)
+education$school_digger_number_of_stars_middle <- as.numeric(education$school_digger_number_of_stars_middle)
+education$school_digger_rank_elementary <- as.numeric(education$school_digger_rank_elementary)
+education$school_digger_rank_high <- as.numeric(education$school_digger_rank_high)
+education$school_digger_rank_middle <- as.numeric(education$school_digger_rank_middle)
+education$school_digger_rank_of_elementary <- as.numeric(education$school_digger_rank_of_elementary)
+education$school_digger_rank_of_high <- as.numeric(education$school_digger_rank_of_high)
+education$school_digger_rank_of_middle <- as.numeric(education$school_digger_rank_of_middle)
+education$number_of_all_students_no_value_means_redacted <- as.numeric(education$number_of_all_students_no_value_means_redacted)
+
+education <- education[2:52,]
+
 
 ```
 
