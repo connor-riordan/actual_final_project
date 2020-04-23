@@ -14,6 +14,7 @@ library(janitor)
 library(gt)
 library(scales)
 library(markdown)
+library(usmap)
 ```
 
 ## Presidential Election Results by County 2000-2016
@@ -34,11 +35,13 @@ dat %>%
   ggplot(aes(candidate, candidatevotes, fill = abb_county)) + 
   geom_bar(stat = "identity", position = position_dodge())
 
-dat %>%
-  ggplot(aes(year, totalvotes, color = abb_county)) +
-  geom_line(stat = "identity")
+us_counties <- map_data("county")
+  
+us_counties
 
+pres_results$region <- tolower(pres_results$state)
 
+# left_join(us_counties, pres_results)
 ```
 
 ## American Community Surveys 2014-2018 (5-Year Estimates)
@@ -106,6 +109,30 @@ age_income_2016 <- age_income_2016 %>%
     "registered_total_percent" = reported_registered_17,
     "voted_total_percent" = reported_voted_18
   )
+age_income_2016_18_over <- age_income_2016 %>%
+  head(13) %>%
+  select(! age_group) %>%
+  drop_na()
+
+age_income_2016_18_24 <- age_income_2016[14:25,] %>%
+  select(! age_group) %>%
+  drop_na()
+
+age_income_2016_25_44 <- age_income_2016[26:37,] %>%
+  select(! age_group) %>%
+  drop_na()
+
+age_income_2016_45_64 <- age_income_2016[38:49,] %>%
+  select(! age_group) %>%
+  drop_na()
+
+age_income_2016_65_74 <- age_income_2016[50:61,] %>%
+  select(! age_group) %>%
+  drop_na()
+
+age_income_2016_75_over <- age_income_2016[62:73,] %>%
+  select(! age_group) %>%
+  drop_na()
 
 age_income_2016
 ```

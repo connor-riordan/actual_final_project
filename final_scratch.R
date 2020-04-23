@@ -54,5 +54,48 @@ age_income_2016 <- age_income_2016 %>%
     "voted_total_percent" = reported_voted_18
   )
 
+age_income_2016_18_over <- age_income_2016 %>%
+  head(13) %>%
+  select(! age_group) %>%
+  drop_na()
+
+age_income_2016_18_24 <- age_income_2016[14:25,] %>%
+  select(! age_group) %>%
+  drop_na()
+
+age_income_2016_25_44 <- age_income_2016[26:37,] %>%
+  select(! age_group) %>%
+  drop_na()
+
+age_income_2016_45_64 <- age_income_2016[38:49,] %>%
+  select(! age_group) %>%
+  drop_na()
+
+age_income_2016_65_74 <- age_income_2016[50:61,] %>%
+  select(! age_group) %>%
+  drop_na()
+
+age_income_2016_75_over <- age_income_2016[62:73,] %>%
+  select(! age_group) %>%
+  drop_na()
+
 saveRDS(object = age_income_2016, file = "final_project/rds/age_income_2016.RDS")
+
+saveRDS(object = age_income_2016_18_over, file = "final_project/rds/age_income_2016_18_over.RDS")
+
+saveRDS(object = age_income_2016_18_24, file = "final_project/rds/age_income_2016_18_24.RDS")
+
+saveRDS(object = age_income_2016_25_44, file = "final_project/rds/age_income_2016_25_44.RDS")
+
+saveRDS(object = age_income_2016_45_64, file = "final_project/rds/age_income_2016_45_64.RDS")
+
+saveRDS(object = age_income_2016_65_74, file = "final_project/rds/age_income_2016_65_74.RDS")
+
+saveRDS(object = age_income_2016_75_over, file = "final_project/rds/age_income_2016_75_over.RDS")
+
+
+
+
+
+
 

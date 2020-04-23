@@ -10,7 +10,21 @@ library(ggplot2)
 pres_res <- readRDS("pres_results.RDS")
 
 presasvector <- pres_res$abb_county %>% unique()
+
+age_income_2016 <- readRDS("age_income_2016.RDS")
     
+ai_18_over <- readRDS("age_income_2016_18_over.RDS")
+
+ai_18_24 <- readRDS("age_income_2016_18_24.RDS")
+
+ai_25_44 <- readRDS("age_income_2016_25_44.RDS")
+
+ai_45_64 <- readRDS("age_income_2016_45_64.RDS")
+
+ai_65_74 <- readRDS("age_income_2016_65_74.RDS")
+
+ai_75_over <- readRDS("age_income_2016_75_over.RDS")
+
 options(scipen = 999)
 
 
@@ -42,19 +56,34 @@ ui <- navbarPage(
                      
                      br(), br(),
                      
-                     tableOutput("results")))
+                     tableOutput("results"),
+                     
+                     plotOutput("lpd"),
+                     
+                     br(), br(),
+                     
+                     tableOutput("results2")))
     )),
    
-    tabPanel("Linear Presidential Election Data by County",
-            fluidPage(
-                sidebarLayout(
-                    sidebarPanel(
-                        helpText("Examine Linear Presidential Election Data."),
-                    fluidRow(selectizeInput("county", "Choose a county:", choices = presasvector, options = list("actions-box" = TRUE), multiple = TRUE))),
-                mainPanel(
-                    plotOutput("lpd"),
-                    br(), br(),
-                    tableOutput("results2"))
+    tabPanel("Income Statistics for Various Age Groups",
+            
+             fluidPage(
+                
+                 sidebarLayout(
+                    
+                     sidebarPanel(
+                        
+                         helpText("Examine Income Data."),
+                    
+                         fluidRow(selectizeInput("age", "Choose an age group:", choices = c(ai_18_over = "18+", ai_18_24 = "18-24", ai_25_44 = "25-44", ai_45_64 = "45-64", ai_65_74 = "65-74", ai_75_over = "75+"), options = list("actions-box" = TRUE), multiple = TRUE))),
+                
+                 mainPanel(
+                     
+                     plotOutput("income"),
+                     
+                     br(), br(),
+                     
+                     tableOutput("results3"))
                     )
             )
     ),
@@ -100,9 +129,23 @@ server <- function(input, output) {
     
     output$lpd <- renderPlot({
         pres_res %>%
+            
             filter(abb_county %in% input$abb_county) %>%
+            
             ggplot(aes(year, totalvotes, fill = abb_county)) +
+            
             geom_line(stat = "identity", position = position_dodge())
+    })
+    
+    output$income <- renderPlot({
+        if(input$age == "ai_18_over"){
+            
+          renderPlot(ai_18_over %>% 
+                
+                ggplot(aes(total_income, reported_voted)) +
+                
+                geom_bar(stat = "identity", position = position_dodge()))
+        } 
     })
 }
 
