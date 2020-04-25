@@ -21,16 +21,26 @@ fluidPage(
 
 
 server <- function(input, output) {
+  
   output$voting_data <- renderPlot({
+    
     x <- seq(1, nrow(health[health$name_of_area == input$county, ]), 1)
+    
     y <- health[health$name_of_area == input$county, input$y_var]
+    
     dat <- as.data.frame(cbind(x, y))
+    
     dat %>%
+      
       ggplot(aes(x, y)) + 
+      
       scale_x_discrete(name = 'county',
+                       
                        breaks = x,
+                       
                        labels = paste(x),
                        limits = x) + 
+      
       geom_bar(stat = "identity") + theme_classic() + labs(
         title = "Health Data"
       )

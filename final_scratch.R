@@ -93,6 +93,30 @@ saveRDS(object = age_income_2016_65_74, file = "final_project/rds/age_income_201
 
 saveRDS(object = age_income_2016_75_over, file = "final_project/rds/age_income_2016_75_over.RDS")
 
+income_county <- read_excel("raw_data/per_capita_income_by_county.xlsx") %>%
+  clean_names()
+
+income_county <- income_county %>%
+  rename(
+    "county" = table_1_per_capita_personal_income_by_county_2016_2018,
+    "personal_income_2016" = x2,
+    "personal_income_2017" = x3,
+    "personal_income_2018" = x4,
+    "personal_income_rank_state_2018" = x5,
+    "pct_change_2017" = x6,
+    "pct_change_2018" = x7,
+    "rank_in_state_pct_change" = x8
+  )
+
+income_county <- income_county[4:3223, 1:5]
+
+saveRDS(object = income_county, file = "final_project/rds/income_county.RDS")
+
+
+
+
+
+
 
 
 

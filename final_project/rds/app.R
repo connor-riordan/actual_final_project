@@ -29,6 +29,10 @@ education <- readRDS("education.RDS")
 
 edasvector <- education$name_of_area %>% unique()
 
+income_county <- readRDS("income_county.RDS")
+
+incomeasvector <- income_county$county
+
 options(scipen = 999)
 
 
@@ -79,7 +83,7 @@ ui <- navbarPage(
                         
                          helpText("Examine Income Data."),
                     
-                         fluidRow(selectizeInput("age", "Choose an age group:", choices = c(`Aged 18 or older` = "ai_18_over", ai_18_24 = "ai_18_24", ai_25_44 = "ai_25_44", ai_45_64 = "ai_45_64", ai_65_74 = "ai_65_74", ai_75_over = "ai_75_over"), options = list("actions-box" = TRUE), multiple = TRUE))),
+                         fluidRow(selectizeInput("age", "Choose an age group:", choices = c(`Aged 18 or older` = "ai_18_over", `Aged 18 to 24` = "ai_18_24", `Aged 25 to 44` = "ai_25_44", `Aged 45 to 64` = "ai_45_64", `Aged 65 to 74` = "ai_65_74", `Aged 75 and older` = "ai_75_over"), options = list("actions-box" = TRUE), multiple = TRUE))),
                 
                  mainPanel(
                      
@@ -92,17 +96,49 @@ ui <- navbarPage(
             )
     ),
     
+    tabPanel("More Income Statistics",
+             
+             fluidPage(
+                 
+                 sidebarLayout(
+                     
+                     sidebarPanel(
+                         
+                         helpText("Examine Income Data."),
+                         
+                         fluidRow(selectizeInput("county", "Choose a county:", choices = edasvector, options = list("actions-box" = TRUE), multiple = TRUE),
+                                  selectInput("ed_y_var", "Choose a variable to measure:", choices = c(colnames(income_county)[-c(1:2)])))
+                         ),
+                
+                mainPanel(
+                    
+                    plotOutput("income2"),
+                    
+                    br(), br(),
+                    
+                    tableOutput("results4"))
+             ))),
+    
     tabPanel("Education Data",
-        fluidPage(
-            sidebarLayout(
-                helpText("Examine Education Data."),
-                fluidRow(selectizeInput("state", "Choose a sate:", choices = edasvector, options = list("actions-box" = TRUE), multiple = TRUE),
-                         selectInput("y-var", "Choose a variable to measure:", choices = c(colnames(education)[-c(1:2)]))),
+        
+             fluidPage(
+            
+                 sidebarLayout(
+                
+                     helpText("Examine Education Data."),
+                
+                     fluidRow(selectizeInput("state", "Choose a sate:", choices = edasvector, options = list("actions-box" = TRUE), multiple = TRUE),
+                         
+                              selectInput("y-var", "Choose a variable to measure:", choices = c(colnames(education)[-c(1:2)]))),
             ),
+            
             mainPanel(
+                
                 plotOutput("education"),
+                
                 br(), br(),
-                tableOutput("results4")
+                
+                tableOutput("results5")
             )
         )
     ),
@@ -166,43 +202,24 @@ server <- function(input, output) {
             
             geom_bar(stat = "identity", position = position_dodge())
         
-        #if(input$age == "18+"){
-        #    
-        #    ai_18_over %>% 
-        #        
-        #        ggplot(aes(total_income, reported_voted)) +
-        #        
-        #        geom_bar(stat = "identity", position = position_dodge())
-        #} 
     })
     
-    output$education <- renderPlot({
+    output$income2 <- renderPlot({
         
-        #education %>% 
-        #    
-        #    filter(qualifying_name %in% input$state) %>%
-        #        
-        #    ggplot(aes(qualifying_name, get(input$y_var))) +
-        #        
-        #    geom_bar(stat = "identity", position = position_dodge())
-        
-        education %>% 
+        income_county %>% 
             
-            filter(qualifying_name %in% input$state) %>%
+            filter(county %in% input$county) %>%
             
-            ggplot(aes(qualifying_name, get(input$`y-var`))) +
+            ggplot(aes(county, get(input$`ed_y_var`))) +
             
             geom_bar(stat = "identity", position = position_dodge())
         
     })
+    
+  
 }
 
 
 shinyApp(ui = ui, server = server)
 
-# Questions for Amy for pres_res:
-# How do I filter by year and have year specified by input$year?
-# How can I choose a different color for different inputs? Ex: having bars colored by party when they select the party variable, or
-# having different colors for each candidate on a single bar?
-# How should I clean up the data? (specific on other page)
-# How to I make my outputs correspond with my inputs with multiple tabs/graphs?
+

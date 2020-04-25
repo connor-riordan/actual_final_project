@@ -9,12 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+library(dplyr)
 library(readxl)
 library(janitor)
 library(gt)
 library(scales)
 library(markdown)
 library(usmap)
+library(tidyr)
 ```
 
 ## Presidential Election Results by County 2000-2016
@@ -120,7 +122,8 @@ education$school_digger_rank_of_middle <- as.numeric(education$school_digger_ran
 education$number_of_all_students_no_value_means_redacted <- as.numeric(education$number_of_all_students_no_value_means_redacted)
 
 education <- education[2:52,]
-
+education %>% filter(qualifying_name == "Connecticut") %>%
+ggplot(aes(qualifying_name, school_digger_number_of_stars_elementary)) + geom_col()
 
 ```
 
@@ -184,7 +187,32 @@ age_income_2016_75_over <- age_income_2016[62:73,] %>%
 age_income_2016
 ```
 
+## Income by County
 
+```{r}
+income_county <- read_excel("raw_data/per_capita_income_by_county.xlsx") %>%
+  clean_names()
+
+income_county <- income_county %>%
+  rename(
+    "county" = table_1_per_capita_personal_income_by_county_2016_2018,
+    "personal_income_2016" = x2,
+    "personal_income_2017" = x3,
+    "personal_income_2018" = x4,
+    "personal_income_rank_state_2018" = x5,
+    "pct_change_2017" = x6,
+    "pct_change_2018" = x7,
+    "rank_in_state_pct_change" = x8
+  )
+
+income_county <- income_county[4:3223, 1:5]
+
+income_county
+  
+
+
+
+```
 
 
 

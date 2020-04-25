@@ -16,3 +16,15 @@ server <- function(input, output) {
       )
   })
 }
+
+output$education <- renderPlot({
+  
+  education %>% 
+    
+    filter(qualifying_name %in% input$state) %>%
+    
+    ggplot(aes(qualifying_name, get(input$`y-var`))) +
+    
+    geom_histogram(stat = "identity", position = position_dodge())
+  
+})
