@@ -78,14 +78,48 @@ colnames(new_counties)[1:2] <- c('state', 'county')
 newtest <- merge.data.frame(newdata, new_counties, by = c('state', 'county'))
 ```
 
-## American Community Surveys 2014-2018 (5-Year Estimates)
+```{r}
+pres_results_reg <- pres_results %>%
+  select(! c(candidate, party, candidatevotes)) %>%
+  filter(year == 2016) %>%
+  group_by(county, year) %>% 
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+
+```
+
+## Income by County
 
 ```{r}
-acs <- read.csv("raw_data/acs_5ye.csv") %>%
-  clean_names() %>%
-  select(! c(4:52)) %>%
-  select(! c(54:57))
+income_county <- read_excel("raw_data/per_capita_income_by_county.xlsx") %>%
+  clean_names()
 
+income_county <- income_county %>%
+  rename(
+    "county" = table_1_per_capita_personal_income_by_county_2016_2018,
+    "personal_income_2016" = x2,
+    "personal_income_2017" = x3,
+    "personal_income_2018" = x4,
+    "personal_income_rank_state_2018" = x5,
+    "pct_change_2017" = x6,
+    "pct_change_2018" = x7,
+    "rank_in_state_pct_change" = x8
+  )
+
+income_county <- income_county[6:3223, 1:5]
+
+income_county
+  
+
+
+
+```
+
+
+```{r, join}
+
+
+
+full_join(pres_results, income_county, by = county)
 
 ```
 
@@ -184,35 +218,17 @@ age_income_2016_75_over <- age_income_2016[62:73,] %>%
   select(! age_group) %>%
   drop_na()
 
-age_income_2016
-```
-
-## Income by County
-
-```{r}
-income_county <- read_excel("raw_data/per_capita_income_by_county.xlsx") %>%
-  clean_names()
-
-income_county <- income_county %>%
-  rename(
-    "county" = table_1_per_capita_personal_income_by_county_2016_2018,
-    "personal_income_2016" = x2,
-    "personal_income_2017" = x3,
-    "personal_income_2018" = x4,
-    "personal_income_rank_state_2018" = x5,
-    "pct_change_2017" = x6,
-    "pct_change_2018" = x7,
-    "rank_in_state_pct_change" = x8
-  )
-
-income_county <- income_county[4:3223, 1:5]
-
-income_county
+age_income_2016_clean <- age_income_2016[2:166, 2:18]
   
+```
 
+```{r, bind}
 
+cbind(pres_results, age_income_2016_clean)
 
 ```
+
+
 
 
 

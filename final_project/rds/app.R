@@ -4,6 +4,7 @@ library(shiny)
 library(tidyverse)
 library(markdown)
 library(ggplot2)
+library(base)
 
 
 
@@ -52,9 +53,7 @@ ui <- navbarPage(
                      
                      fluidRow(selectInput("year", "Choose a year:", choices = pres_res$year),
                               
-                              selectizeInput("county", "Choose a county:", choices = presasvector, options = list("actions-box" = TRUE), multiple = TRUE),
-                              
-                              selectInput("y_var", "Choose what you want to measure:", choices = c(colnames(pres_res)[-c(1:6)]))
+                              selectizeInput("county", "Choose a county:", choices = presasvector, options = list("actions-box" = TRUE), multiple = TRUE)
                               
                               )),
                  
@@ -83,7 +82,9 @@ ui <- navbarPage(
                         
                          helpText("Examine Income Data."),
                     
-                         fluidRow(selectizeInput("age", "Choose an age group:", choices = c(`Aged 18 or older` = "ai_18_over", `Aged 18 to 24` = "ai_18_24", `Aged 25 to 44` = "ai_25_44", `Aged 45 to 64` = "ai_45_64", `Aged 65 to 74` = "ai_65_74", `Aged 75 and older` = "ai_75_over"), options = list("actions-box" = TRUE), multiple = TRUE))),
+                         fluidRow(selectInput("age", "Choose an age group:", choices = c(`Aged 18 or older` = "ai_18_over", `Aged 18 to 24` = "ai_18_24", `Aged 25 to 44` = "ai_25_44", `Aged 45 to 64` = "ai_45_64", `Aged 65 to 74` = "ai_65_74", `Aged 75 and older` = "ai_75_over")),
+                                  
+                                  selectizeInput("total_income", "Choose an income bracket:", choices = age_income_2016$total_income, options = list("actions-box" = TRUE), multiple = TRUE))),
                 
                  mainPanel(
                      
@@ -107,6 +108,7 @@ ui <- navbarPage(
                          helpText("Examine Income Data."),
                          
                          fluidRow(selectizeInput("county", "Choose a county:", choices = edasvector, options = list("actions-box" = TRUE), multiple = TRUE),
+                                  
                                   selectInput("ed_y_var", "Choose a variable to measure:", choices = c(colnames(income_county)[-c(1:2)])))
                          ),
                 
@@ -151,6 +153,13 @@ ui <- navbarPage(
              p("Tour of the modeling choices you made and 
               an explanation of why you made them")),
     
+    mainPanel(
+        
+        tableOutput("regression")
+    
+        ),
+    
+    
     tabPanel("About",
              
              titlePanel("About"),
@@ -162,7 +171,11 @@ ui <- navbarPage(
              h3("About Me"),
              
              p("My name is Connor Riordan and I am looking to study Government and TDM. 
-             You can reach me at criordan@college.harvard.edu."))
+             You can reach me at criordan@college.harvard.edu."),
+             
+             mainPanel(imageOutput("image"))
+             
+             )
 )
 
 server <- function(input, output) {
@@ -179,7 +192,14 @@ server <- function(input, output) {
             
             geom_bar(stat = "identity", position = position_dodge()) +
             
-            ggtitle(paste("Presidential Election Results by County, Year = ",input$year))
+            ggtitle(paste("Presidential Election Results by County, Year = ",input$year)) + 
+            
+            theme_bw() + labs(
+                
+                x = "County",
+                
+                y = "Number of Votes for Each Candidate"
+            )
         
     })
     
@@ -188,19 +208,42 @@ server <- function(input, output) {
             
             filter(abb_county %in% input$county) %>%
             
-            ggplot(aes(year, totalvotes, fill = abb_county)) +
+            ggplot(aes(year, totalvotes, color = abb_county)) +
             
-            geom_line(stat = "identity", position = position_dodge())
+            geom_line(stat = "identity", position = position_dodge()) + 
+            
+            theme_bw() + labs(
+                
+                title = "Change in Total Votes by County, 2000-2016",
+                
+                color = "County",
+                
+                x = "County",
+                
+                y = "Total Votes"
+            )
     })
     
     output$income <- renderPlot({
         
         test <- get(input$age)
+        
         test  %>% 
+            
+            filter(total_income %in% input$total_income) %>%
             
             ggplot(aes(total_income, reported_voted)) +
             
-            geom_bar(stat = "identity", position = position_dodge())
+            geom_bar(stat = "identity", position = position_dodge()) +
+            
+            theme_bw() + labs(
+                
+                title = "Measuring Income Statistics for Different Groups",
+                
+                x = "Income Bracket",
+                
+                y = "Number Reported Voted"
+            )
         
     })
     
@@ -212,9 +255,25 @@ server <- function(input, output) {
             
             ggplot(aes(county, get(input$`ed_y_var`))) +
             
-            geom_bar(stat = "identity", position = position_dodge())
+            geom_bar(stat = "identity", position = position_dodge()) +
+            
+            theme_bw()
         
     })
+    
+    output$regression <- renderTable({
+        
+    })
+    
+    
+    output$image <- renderImage({
+        
+        filename <- normalizePath(file.path('.', paste('image', '.jpg', sep='')))
+        
+        list(src = filename)
+        
+    }, deleteFile = FALSE)
+
     
   
 }
