@@ -71,55 +71,58 @@ ui <- navbarPage(
                      
                      tableOutput("results2")))
     )),
-   
-    tabPanel("Income Statistics for Various Age Groups",
-            
-             fluidPage(
-                
-                 sidebarLayout(
-                    
-                     sidebarPanel(
-                        
-                         helpText("Examine Income Data."),
-                    
-                         fluidRow(selectInput("age", "Choose an age group:", choices = c(`Aged 18 or older` = "ai_18_over", `Aged 18 to 24` = "ai_18_24", `Aged 25 to 44` = "ai_25_44", `Aged 45 to 64` = "ai_45_64", `Aged 65 to 74` = "ai_65_74", `Aged 75 and older` = "ai_75_over")),
-                                  
-                                  selectizeInput("total_income", "Choose an income bracket:", choices = age_income_2016$total_income, options = list("actions-box" = TRUE), multiple = TRUE))),
-                
-                 mainPanel(
-                     
-                     plotOutput("income"),
-                     
-                     br(), br(),
-                     
-                     tableOutput("results3"))
-                    )
-            )
-    ),
     
-    tabPanel("More Income Statistics",
-             
-             fluidPage(
-                 
-                 sidebarLayout(
-                     
-                     sidebarPanel(
-                         
-                         helpText("Examine Income Data."),
-                         
-                         fluidRow(selectizeInput("county", "Choose a county:", choices = edasvector, options = list("actions-box" = TRUE), multiple = TRUE),
+    tabPanel("Income",
+             tabsetPanel(
+                 tabPanel("Income Statistics for Various Age Groups",
+                          
+                          fluidPage(
+                              
+                              sidebarLayout(
                                   
-                                  selectInput("ed_y_var", "Choose a variable to measure:", choices = c(colnames(income_county)[-c(1:2)])))
-                         ),
-                
-                mainPanel(
-                    
-                    plotOutput("income2"),
-                    
-                    br(), br(),
-                    
-                    tableOutput("results4"))
-             ))),
+                                  sidebarPanel(
+                                      
+                                      helpText("Examine Income Data."),
+                                      
+                                      fluidRow(selectInput("age", "Choose an age group:", choices = c(`Aged 18 or older` = "ai_18_over", `Aged 18 to 24` = "ai_18_24", `Aged 25 to 44` = "ai_25_44", `Aged 45 to 64` = "ai_45_64", `Aged 65 to 74` = "ai_65_74", `Aged 75 and older` = "ai_75_over")),
+                                               
+                                               selectizeInput("total_income", "Choose an income bracket:", choices = age_income_2016$total_income, options = list("actions-box" = TRUE), multiple = TRUE))),
+                                  
+                                  mainPanel(
+                                      
+                                      plotOutput("income"),
+                                      
+                                      br(), br(),
+                                      
+                                      tableOutput("results3"))
+                              )
+                          )
+                 ),
+                 
+                 tabPanel("More Income Statistics",
+                          
+                          fluidPage(
+                              
+                              sidebarLayout(
+                                  
+                                  sidebarPanel(
+                                      
+                                      helpText("Examine Income Data."),
+                                      
+                                      fluidRow(selectizeInput("county", "Choose a county:", choices = incomeasvector, multiple = TRUE),
+                                               
+                                               selectInput("ed_y_var", "Choose a variable to measure:", choices = c(colnames(income_county)[-c(1)])))
+                                  ),
+                                  
+                                  mainPanel(
+                                      
+                                      plotOutput("income2"),
+                                      
+                                      br(), br(),
+                                      
+                                      tableOutput("results4"))
+                              )))
+             )),
     
     tabPanel("Education Data",
         
@@ -251,9 +254,9 @@ server <- function(input, output) {
         
         income_county %>% 
             
-            filter(county %in% input$county) %>%
+            filter(county %in% c("Alabama")) %>%
             
-            ggplot(aes(county, get(input$`ed_y_var`))) +
+            ggplot(aes(county, personal_income_2017)) +
             
             geom_bar(stat = "identity", position = position_dodge()) +
             
