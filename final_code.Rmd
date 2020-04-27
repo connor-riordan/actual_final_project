@@ -182,6 +182,8 @@ income_county_ns <- income_county %>%
   drop_na() %>%
   mutate(abb_county = paste0(county, ", ", state_po))
 
+#income_county_ns <- income_county_ns[-c(2906, 2908, 2910, 2909, 2912, 2913, 2914), ]
+
 income_county_ns <- income_county_ns %>%
   mutate(ID_2 = seq.int(nrow(income_county_ns)))
 
@@ -208,6 +210,10 @@ ic_rank_2018 <- income_county_ns %>%
   rename(
     "y" = personal_income_rank_state_2018
   )
+
+ic_2016 %>%
+  filter(county == "Autauga") %>%
+  ggplot(aes(county, y)) + geom_line()
                                                                                
 
 pres_income <- inner_join(pres_results_reg, income_county_ns)
@@ -230,7 +236,8 @@ county_pop <- read_csv("raw_data/estimated_county_population.csv") %>%
 county_pop <- county_pop %>%
   select(c(ctyname, popestimate2016))
 
-county_pop <- county_pop[-c(329),]
+county_pop <- county_pop[-c(329, 560),] #2867, 2868, 2871, 2878, 2880, 2887, 2889, 2894, 2897, 2901, 2904,
+                            #2908, 2910, 2919, 2923, 2926, 2927, 2928, 2929, 2934, 2935),]
 
 county_pop <- county_pop %>%
   mutate(ID_2 = seq.int(nrow(county_pop))) %>%
@@ -240,7 +247,7 @@ county_pop <- county_pop %>%
 pres_income <- pres_income %>%
   mutate(county_c = paste0(county, " County"))
 
-inner_join(county_pop, income_county_ns)
+regression <- inner_join(county_pop, income_county_ns)
 
 
 ```

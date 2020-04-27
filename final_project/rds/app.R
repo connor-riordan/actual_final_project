@@ -78,37 +78,52 @@ options(scipen = 999)
 ui <- navbarPage(
   
     "How Separate Variables Affect Voting Patterns",
-    
-    tabPanel("Presidential Election Data Since 2000",
+  
+    tabPanel("Voting",
              
-             fluidPage(
-                 
-                 sidebarLayout(
-                 
-                     sidebarPanel(
-                     
-                         helpText("Examine Presidential Election Data."),
-                     
-                     fluidRow(selectInput("year", "Choose a year:", choices = pres_res$year),
-                              
-                              selectizeInput("county", "Choose a county:", choices = presasvector, options = list("actions-box" = TRUE), multiple = TRUE)
-                              
-                              )),
-                 
-                 mainPanel(
-                     
-                     plotOutput("voting_data"),
-                     
-                     br(), br(),
-                     
-                     tableOutput("results"),
-                     
-                     plotOutput("lpd"),
-                     
-                     br(), br(),
-                     
-                     tableOutput("results2")))
-    )),
+             tabsetPanel(tabPanel("Presidential Election Data Since 2000",
+                                  
+                                  fluidPage(
+                                    
+                                    sidebarLayout(
+                                      
+                                      sidebarPanel(
+                                        
+                                        helpText("Examine Presidential Election Data."),
+                                        
+                                        fluidRow(selectInput("year", "Choose a year:", choices = pres_res$year),
+                                                 
+                                                 selectizeInput("county", "Choose a county:", choices = presasvector, options = list("actions-box" = TRUE), multiple = TRUE)
+                                                 
+                                        )),
+                                      
+                                      mainPanel(
+                                        
+                                        plotOutput("voting_data"),
+                                        
+                                        br(), br(),
+                                        
+                                        tableOutput("results"),
+                                        
+                                        plotOutput("lpd"),
+                                        
+                                        br(), br(),
+                                        
+                                        tableOutput("results2"))))),
+                         
+                         tabPanel("Explanation"),
+                         
+                         h3("Why these graphs?"),
+                         
+                         p("The first of these two graphs offers people the opportunity to compare the voting patterns of different counties
+                           across the United States. Later on, I examine how income, education, and health each impact the total number of votes
+                           cast in 2016.
+                           
+                           The secong graph is a line graph charting the change in the total number of votes cast by the selected counties for the
+                           last five presidential elections, which is useful for informing us how outside variables have impacted voting growth
+                           (or lack thereof).")
+                         
+                         )),
     
 # For this next tab, I wanted to look at income data for different age groups
 # for the nation and also by county. The second part does not work yet, but for
@@ -119,8 +134,10 @@ ui <- navbarPage(
 # So far, I have had no luck, but I will have luck soon.
     
     tabPanel("Income",
+             
              tabsetPanel(
-                 tabPanel("Income Statistics for Various Age Groups",
+                 
+               tabPanel("Income Statistics for Various Age Groups",
                           
                           fluidPage(
                               
@@ -167,56 +184,92 @@ ui <- navbarPage(
                                       br(), br(),
                                       
                                       tableOutput("results4"))
-                              )))
-             )),
+                              
+                                  ))),
+               
+               tabPanel("Explanation",
+                        
+                        p("It is a fact that people of a higher socioeconomic status are more likely to vote in elections. There are several possible
+                          reasons for this, including a lack of reliable transportation, a lack of education, and needing to work long
+                          hours. In this section of my project, I produced two graphs. The first looks at income brackets for the United States as a
+                          whole, and how each of these classes votes. The second graph gives us the opportunity to examine income on a per-county basis,
+                          which is useful for determining why certain counties may have higher turnout than others."
+                          
+                        )))),
     
 # This education data is not fantastic, so I have downloaded some more to make
 # up for that. My new education data focuses mainly on the graduation rates
 # for school districts across the country, which I think will be invaluable
 # to compare with income and health to inform how people voted in elections.
 
-    tabPanel("Education Data",
-        
-             fluidPage(
-            
-                 sidebarLayout(
-                
-                     helpText("Examine Education Data."),
-                
-                     fluidRow(selectInput("year2", "Choose a year:", choices = grad_ed$year),
-                              
-                              selectizeInput("school_district", "Choose a school district:", choices = districtasvector, options = list("actions-box" = TRUE), multiple = TRUE),
-            )),
-            
-            mainPanel(
-                
-                plotOutput("education"),
-                
-                br(), br(),
-                
-                tableOutput("results5")
-            )
-        )
-    ),
-    
-# This is the discussion part and where I am going to run my regression. I
-# haven't had a chance to actually finish running my regression and put it in
-# my data because I had to spend all night cleaning it up in order to actually
-# join the presidential election data and the income data, which are the two
-# sets that I want to join for the regression.
-    
-    tabPanel("Running Regressions and Discussion",
+
+
+    tabPanel("Education",
              
-             titlePanel("Discussion Title"),
+             tabsetPanel(
+               
+               tabPanel("Education Data",
+                                  
+                                  fluidPage(
+                                    
+                                    sidebarLayout(
+                                      
+                                      helpText("Examine Education Data."),
+                                      
+                                      fluidRow(selectInput("year2", "Choose a year:", choices = grad_ed$year),
+                                               
+                                               selectizeInput("school_district", "Choose a school district:", choices = districtasvector, options = list("actions-box" = TRUE), multiple = TRUE),
+                                      )),
+                                    
+                                    mainPanel(
+                                      
+                                      plotOutput("education"),
+                                      
+                                      br(), br(),
+                                      
+                                      tableOutput("results5"),
+                                      
+                                      plotOutput("education2"),
+                                      
+                                      br(), br(),
+                                      
+                                      tableOutput("results6")
+                                    ))),
+               tabPanel("Explanation",
+                        p("Education is the gateway to becoming more sophisticated, smarter, and learning how to play your part as an American citizen
+                          and a citizen of the world. If a particular school district suffers due to a lack of education funding, then people are likely
+                          to assume that students that graduate from (or don't graduate from) that district will be less likely to vote in elections,
+                          thereby decreasing voter turnout for that particular state. This particular set of education data gives us the graduation rate of
+                          every school district across the country. I wanted to give people another opportunity to compare different school districts in
+                          different states/counties so we can see how education may impact voting."
+                          
+                        ))
+    )),
+
+    tabPanel("Regression",
              
-             p("Tour of the modeling choices you made and 
-              an explanation of why you made them")),
+             p("Unfortunately, I am still working on cleaning the data for the regression. It has taken me hours and hours and I am still not done, so please
+               forgive me :(
+               
+               What I plan to do for the regression is examine income and total votes in 2016, since I am able to combine those two data sets. If I can do something
+               similar with health and education, I will do my best to. I predict that the income will show a positive correlation with total votes (i.e. the more
+               money you have, the more likely you are to vote, which tuus increases the number of total votes.")
+             
+             ),
     
-    mainPanel(
-        
-        tableOutput("regression")
-    
-        ),
+    tabPanel("Discussion",
+             
+             titlePanel("Connor, enlighten us."),
+             
+             p("Most of the models I used for my project were interactive bar graphs. The thing I had in mind the most during
+               the creation of this project was how to let people compare different areas. I think it's really
+               great to be able to compare different counties against one another, so you can look not just at a
+               per-state basis but on an even more specific level. Using selectizeInput allows you to select which
+               counties you want to compare with one another.
+               
+               The data I chose to use was presidential election results, education, and income. None of this data is
+               new, but I think presenting it in an interactive way helps illustrate how disparities in education and 
+               income affects voting patterns across states and counties.")),
     
     
     tabPanel("About",
@@ -225,7 +278,10 @@ ui <- navbarPage(
              
              h3("Project Background and Motivations"),
              
-             p("I think that, now more than ever, it is important to understand how and why voting patterns occur. While none of this is new information, and it may be intuitive for some, it is still important to lay it out in an easily digestible form so people of every background can understand the severity of the situation we face in this country."),
+             p("I think that, now more than ever, it is important to understand how and why voting patterns occur. 
+               While none of this is new information, and it may be intuitive for some, it is still important to 
+               lay it out in an easily digestible form so people of every background can understand the severity 
+               of the situation we face in this country."),
              
              h3("About Me"),
              
@@ -352,6 +408,27 @@ server <- function(input, output) {
           y = "Percent"
         )
         
+    })
+    
+    output$education2 <- renderPlot({
+      
+      grad_ed %>%
+        
+        filter(school_district %in% input$school_district) %>%
+        
+        ggplot(aes(year, percent, color = school_district)) + 
+        
+        geom_line(stat = "identity", position = position_dodge()) + theme_bw() +
+        
+        ggtitle(paste("Graduation Rate Percentage Change by School District, 2006-2016")) +
+        
+        labs(
+          
+          x = "Year",
+          
+          y = "Percent"
+        )
+          
     })
     
 # I wanted to insert an image because I haven't made a video yet!
