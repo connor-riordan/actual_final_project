@@ -93,6 +93,21 @@ saveRDS(object = age_income_2016_65_74, file = "final_project/rds/age_income_201
 
 saveRDS(object = age_income_2016_75_over, file = "final_project/rds/age_income_2016_75_over.RDS")
 
+grad_ed <- read_excel("raw_data/grad_rates_school_district.xlsx") %>%
+  clean_names()
+
+grad_ed <- grad_ed[12:3344,]
+
+grad_ed <- grad_ed %>%
+  dplyr::rename(
+    "percent" = data,
+    "school_district" = location,
+    "year" = time_frame
+  ) %>%
+  select(c(school_district, year, percent))
+
+saveRDS(object = grad_ed, file = "final_project/rds/grad_ed.RDS")
+
 income_county <- read_excel("raw_data/per_capita_income_by_county.xlsx") %>%
   clean_names()
 
@@ -110,13 +125,100 @@ income_county <- income_county %>%
 
 income_county <- income_county[4:3223, 1:5]
 
-saveRDS(object = income_county, file = "final_project/rds/income_county.RDS")
+income_county <- income_county %>%
+  mutate(ID = seq.int(nrow(income_county)))
 
+income_county <- income_county %>%
+  mutate(state_po = ifelse(income_county$ID <= 68, "AL", 
+                           ifelse(between(ID, 70, 99), "AK", 
+                                  ifelse(between(ID, 102, 116), "AZ",
+                                         ifelse(between(ID, 120, 193), "AR",
+                                                ifelse(between(ID, 196, 253), "CA",
+                                                       ifelse(between(ID, 256, 319), "CO",
+                                                              ifelse(between(ID, 322, 329), "CT",
+                                                                     ifelse(between(ID, 332, 334), "DE",
+                                                                            ifelse(between(ID, 336, 336), "DC",
+                                                                                   ifelse(between(ID, 339, 405), "FL",
+                                                                                          ifelse(between(ID, 408, 556), "GA",
+                                                                                                 ifelse(between(ID, 570, 572), "HI",
+                                                                                                        ifelse(between(ID, 575, 618), "ID",
+                                                                                                               ifelse(between(ID, 621, 722), "IL",
+                                                                                                                      ifelse(between(ID, 725, 816), "IN",
+                                                                                                                             ifelse(between(ID, 819, 917), "IA",
+                                                                                                                                    ifelse(between(ID, 920, 1024), "KS",
+                                                                                                                                           ifelse(between(ID, 1027, 1146), "KY",
+                                                                                                                                                  ifelse(between(ID, 1149, 1212), "LA",
+                                                                                                                                                         ifelse(between(ID, 1215, 1230), "MD",
+                                                                                                                                                                ifelse(between(ID, 1233, 1256), "MA",
+                                                                                                                                                                       ifelse(between(ID, 1275, 1357), "MI",
+                                                                                                                                                                              ifelse(between(ID, 1360, 1446), "MN",
+                                                                                                                                                                                     ifelse(between(ID, 1449, 1530), "MS",
+                                                                                                                                                                                            ifelse(between(ID, 1533, 1647), "MO",
+                                                                                                                                                                                                   ifelse(between(ID, 1650, 1705), "MT",
+                                                                                                                                                                                                          ifelse(between(ID, 1708, 1800), "NE",
+                                                                                                                                                                                                                 ifelse(between(ID, 1803, 1819), "NV",
+                                                                                                                                                                                                                        ifelse(between(ID, 1822, 1831), "NH",
+                                                                                                                                                                                                                               ifelse(between(ID, 1834, 1854), "NJ",
+                                                                                                                                                                                                                                      ifelse(between(ID, 1857, 1889), "NM",
+                                                                                                                                                                                                                                             ifelse(between(ID, 1892, 1953), "NY",
+                                                                                                                                                                                                                                                    ifelse(between(ID, 1956, 2055), "NC",
+                                                                                                                                                                                                                                                           ifelse(between(ID, 2058, 2110), "ND",
+                                                                                                                                                                                                                                                                  ifelse(between(ID, 2113, 2200), "OH",
+                                                                                                                                                                                                                                                                         ifelse(between(ID, 2203, 2279), "OK",
+                                                                                                                                                                                                                                                                                ifelse(between(ID, 2282, 2317), "OR",
+                                                                                                                                                                                                                                                                                       ifelse(between(ID, 2320, 2386), "PA",
+                                                                                                                                                                                                                                                                                              ifelse(between(ID, 2389, 2393), "RI",
+                                                                                                                                                                                                                                                                                                     ifelse(between(ID, 2396, 2441), "SC",
+                                                                                                                                                                                                                                                                                                            ifelse(between(ID, 2444, 2509), "SD",
+                                                                                                                                                                                                                                                                                                                   ifelse(between(ID, 2512, 2606), "TN",
+                                                                                                                                                                                                                                                                                                                          ifelse(between(ID, 2609, 2862), "TX",
+                                                                                                                                                                                                                                                                                                                                 ifelse(between(ID, 2865, 2893), "UT",
+                                                                                                                                                                                                                                                                                                                                        ifelse(between(ID, 2896, 2909), "VT",
+                                                                                                                                                                                                                                                                                                                                               ifelse(between(ID, 2912, 2994), "VA",
+                                                                                                                                                                                                                                                                                                                                                      ifelse(between(ID, 3021, 3059), "WA",
+                                                                                                                                                                                                                                                                                                                                                             ifelse(between(ID, 3062, 3116), "WV", "NA")))))))))))))))))))))))))))))))))))))))))))))))))
 
+income_county$state_po[3119:3190] <- "WI"
 
+income_county$state_po[3193:3215] <- "WY"
 
+income_county_ns <- income_county %>%
+  drop_na() %>%
+  mutate(abb_county = paste0(county, ", ", state_po))
 
+ic_2016 <- income_county_ns %>%
+  select(county, personal_income_2016) %>%
+  rename(
+    "y" = personal_income_2016
+  )
 
+ic_2017 <- income_county_ns %>%
+  select(county, personal_income_2017) %>%
+  rename(
+    "y" = personal_income_2017
+  )
+
+ic_2018 <- income_county_ns %>%
+  select(county, personal_income_2018) %>%
+  rename(
+    "y" = personal_income_2018
+  )
+
+ic_rank_2018 <- income_county_ns %>%
+  select(county, personal_income_rank_state_2018) %>%
+  rename(
+    "y" = personal_income_rank_state_2018
+  )
+
+saveRDS(object = income_county_ns, file = "final_project/rds/income_county_ns.RDS")
+
+saveRDS(object = ic_2016, file = "final_project/rds/ic_2016.RDS")
+
+saveRDS(object = ic_2017, file = "final_project/rds/ic_2017.RDS")
+
+saveRDS(object = ic_2018, file = "final_project/rds/ic_2018.RDS")
+
+saveRDS(object = ic_rank_2018, file = "final_project/rds/ic_rank_2018.RDS")
 
 
 

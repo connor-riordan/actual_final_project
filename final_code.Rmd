@@ -114,26 +114,6 @@ income_county <- income_county %>%
 
 income_county <- income_county[6:3223, 1:5]
 
-income_county_ns <- income_county %>%
-  filter(! county == "Alabama" & ! county == "Alaska" & ! county == "Arizona" &
-           ! county == "Arkansas" & ! county == "California" & ! county == "Colorado"  & 
-           ! county == "Connecticut" & ! county == "Delaware" & ! county == "Florida" &
-           ! county == "Georgia" & ! county == "Hawaii" & ! county == "Idaho" &
-           ! county == "Illinois" & ! county == "Indiana" & ! county == "Iowa"  & 
-           ! county == "Kansas" & ! county == "Kentucky" & ! county == "Louisiana" & 
-           ! county == "Maine" & ! county == "Maryland" & ! county == "Massachusetts" & 
-           ! county == "Michigan" & ! county == "Minnesota" & ! county == "Mississippi" & 
-           ! county == "Missouri" & ! county == "Montana" & ! county == "Nebraska" & 
-           ! county == "Nevada" & ! county == "New Hampshire" & ! county == "New Jersey" & 
-           ! county == "New Mexico" & ! county == "New York" & ! county == "North Carolina" & 
-           ! county == "North Dakota" & ! county == "Ohio" & ! county == "Oklahoma" & 
-           ! county == "Oregon" & ! county == "Pennsylvania" & ! county == "Rhode Island" & 
-           ! county == "South Carolina" & ! county == "South Dakota" & ! county =="Tennessee" & 
-           ! county == "Texas" & ! county == "Utah" & ! county == "Vermont" & ! county == "Virginia" & 
-           ! county == "Washington" & ! county == "West Virginia" & ! county == "Wisconsin" & ! county == "Wyoming"
-)
-  
-
 
 
 ```
@@ -201,14 +181,87 @@ income_county$state_po[3193:3215] <- "WY"
 income_county_ns <- income_county %>%
   drop_na() %>%
   mutate(abb_county = paste0(county, ", ", state_po))
+
+income_county_ns <- income_county_ns %>%
+  mutate(ID_2 = seq.int(nrow(income_county_ns)))
+
+ic_2016 <- income_county_ns %>%
+  select(county, personal_income_2016) %>%
+  rename(
+    "y" = personal_income_2016
+  )
+
+ic_2017 <- income_county_ns %>%
+  select(county, personal_income_2017) %>%
+  rename(
+    "y" = personal_income_2017
+  )
+
+ic_2018 <- income_county_ns %>%
+  select(county, personal_income_2018) %>%
+  rename(
+    "y" = personal_income_2018
+  )
+
+ic_rank_2018 <- income_county_ns %>%
+  select(county, personal_income_rank_state_2018) %>%
+  rename(
+    "y" = personal_income_rank_state_2018
+  )
                                                                                
 
-regression <- inner_join(pres_results_reg, income_county)
+pres_income <- inner_join(pres_results_reg, income_county_ns)
 
+pres_income %>%
+  filter(state == "Alabama") %>%
+  ggplot(aes(personal_income_2016, totalvotes)) + geom_point()
 
+# ggplot(regression, aes(personal_income_2016, totalvotes, color = county)) + geom_col()
   
 
 ```
+
+## County Population Estimate
+
+```{r}
+county_pop <- read_csv("raw_data/estimated_county_population.csv") %>%
+  clean_names()
+
+county_pop <- county_pop %>%
+  select(c(ctyname, popestimate2016))
+
+county_pop <- county_pop[-c(329),]
+
+county_pop <- county_pop %>%
+  mutate(ID_2 = seq.int(nrow(county_pop))) %>%
+  dplyr::rename("county_c" = ctyname)
+  
+
+pres_income <- pres_income %>%
+  mutate(county_c = paste0(county, " County"))
+
+inner_join(county_pop, income_county_ns)
+
+
+```
+
+ filter(! county == "Alabama" & ! county == "Alaska" & ! county == "Arizona" &
+           ! county == "Arkansas" & ! county == "California" & ! county == "Colorado"  & 
+           ! county == "Connecticut" & ! county == "Delaware" & ! county == "Florida" &
+           ! county == "Georgia" & ! county == "Hawaii" & ! county == "Idaho" &
+           ! county == "Illinois" & ! county == "Indiana" & ! county == "Iowa"  & 
+           ! county == "Kansas" & ! county == "Kentucky" & ! county == "Louisiana" & 
+           ! county == "Maine" & ! county == "Maryland" & ! county == "Massachusetts" & 
+           ! county == "Michigan" & ! county == "Minnesota" & ! county == "Mississippi" & 
+           ! county == "Missouri" & ! county == "Montana" & ! county == "Nebraska" & 
+           ! county == "Nevada" & ! county == "New Hampshire" & ! county == "New Jersey" & 
+           ! county == "New Mexico" & ! county == "New York" & ! county == "North Carolina" & 
+           ! county == "North Dakota" & ! county == "Ohio" & ! county == "Oklahoma" & 
+           ! county == "Oregon" & ! county == "Pennsylvania" & ! county == "Rhode Island" & 
+           ! county == "South Carolina" & ! county == "South Dakota" & ! county =="Tennessee" & 
+           ! county == "Texas" & ! county == "Utah" & ! county == "Vermont" & ! county == "Virginia" & 
+           ! county == "Washington" & ! county == "West Virginia" & ! county == "Wisconsin" & ! county == "Wyoming"
+)
 
 ## Health Data (2016)
 
@@ -309,7 +362,26 @@ age_income_2016_clean <- age_income_2016[2:166, 2:18]
   
 ```
 
+## Grad Rates by School District
 
+```{r}
+grad_ed <- read_excel("raw_data/grad_rates_school_district.xlsx") %>%
+  clean_names()
+
+grad_ed <- grad_ed[12:3344,]
+
+grad_ed <- grad_ed %>%
+  dplyr::rename(
+    "percent" = data,
+    "school_district" = location,
+    "year" = time_frame
+  ) %>%
+  select(c(school_district, year, percent))
+
+grad_ed
+
+
+```
 
 
 

@@ -48,15 +48,24 @@ edasvector <- education$name_of_area %>% unique()
 
 # This breaks down the income for each individual county.
 
-income_county <- readRDS("income_county.RDS")
+incomeasvector <- income_county_ns$abb_county
 
-# A trend is certainly appearing. I wanted to make all of the income brackets
-# as vectors as well.
+income_county_ns <- readRDS("income_county_ns.RDS")
 
-incomeasvector <- income_county$county
+ic_2016 <- readRDS("ic_2016.RDS")
+
+ic_2017 <- readRDS("ic_2017.RDS")
+
+ic_2018 <- readRDS("ic_2018.RDS")
+
+ic_rank_2018 <- readRDS("ic_rank_2018.RDS")
 
 # I used options in order to properly load in my data, because otherwise my
 # data wouldn't be loaded in.
+
+grad_ed <- readRDS("grad_ed.RDS")
+
+districtasvector <- grad_ed$school_district %>% unique()
 
 options(scipen = 999)
 
@@ -146,9 +155,9 @@ ui <- navbarPage(
                                       
                                       helpText("Examine Income Data."),
                                       
-                                      fluidRow(selectizeInput("county", "Choose a county:", choices = incomeasvector, multiple = TRUE),
+                                      fluidRow(selectizeInput("in_county", "Choose a county:", choices = incomeasvector, multiple = TRUE),
                                                
-                                               selectInput("ed_y_var", "Choose a variable to measure:", choices = c(colnames(income_county)[-c(1)])))
+                                               selectInput("in_y_var", "Choose a variable to measure:", choices = c(`Personal Income 2016` = "ic_2016", `Personal Income 2017` = "ic_2017", `Personal Income 2018` = "ic_2018", `Personal Income Rank 2018` = "ic_rank_2018")))
                                   ),
                                   
                                   mainPanel(
@@ -174,10 +183,10 @@ ui <- navbarPage(
                 
                      helpText("Examine Education Data."),
                 
-                     fluidRow(selectizeInput("state", "Choose a sate:", choices = edasvector, options = list("actions-box" = TRUE), multiple = TRUE),
-                         
-                              selectInput("y-var", "Choose a variable to measure:", choices = c(colnames(education)[-c(1:2)]))),
-            ),
+                     fluidRow(selectInput("year2", "Choose a year:", choices = grad_ed$year),
+                              
+                              selectizeInput("school_district", "Choose a school district:", choices = districtasvector, options = list("actions-box" = TRUE), multiple = TRUE),
+            )),
             
             mainPanel(
                 
@@ -284,7 +293,7 @@ server <- function(input, output) {
             
             filter(total_income %in% input$total_income) %>%
             
-            ggplot(aes(total_income, reported_voted)) +
+            ggplot(aes(total_income, reported_voted, fill = total_income)) +
             
             geom_bar(stat = "identity", position = position_dodge()) +
             
@@ -300,20 +309,48 @@ server <- function(input, output) {
     })
     
     output$income2 <- renderPlot({
+      
+      incomevars <- get(input$in_y_var)
         
-        income_county %>% 
+        incomevars %>%
+          
+          filter(county %in% input$in_county) %>%
+          
+          ggplot(aes(county, y, fill = county)) +
+          
+          geom_bar(stat = "identity", position = position_dodge()) +
+          
+          theme_bw() + labs(
             
-            filter(county %in% c("Alabama")) %>%
+            title = "Income Statistics by County",
             
-            ggplot(aes(county, personal_income_2017)) +
+            x = "County",
             
-            geom_bar(stat = "identity", position = position_dodge()) +
-            
-            theme_bw()
-        
+            y = "Personal Income/Ranking"
+          )
+      
     })
     
-    output$regression <- renderTable({
+    output$education <- renderPlot({
+      
+      grad_ed %>%
+        
+        filter(school_district %in% input$school_district) %>%
+        
+        filter(year == input$year2) %>%
+        
+        ggplot(aes(school_district, percent, fill = school_district)) + 
+        
+        geom_bar(stat = "identity", position = position_dodge()) + theme_bw() +
+        
+        ggtitle(paste("Graduation Rate Percentage by School District, Year = ", input$year2)) +
+        
+        labs(
+          
+          x = "School District",
+          
+          y = "Percent"
+        )
         
     })
     
