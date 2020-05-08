@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+library(plyr)
 library(readr)
 library(tidyverse)
 library(dplyr)
@@ -182,48 +183,48 @@ income_county_ns <- income_county %>%
   drop_na() %>%
   mutate(abb_county = paste0(county, ", ", state_po))
 
+income_county_ns$personal_income_2016 <- as.numeric(income_county_ns$personal_income_2016)
+
+income_county_ns$personal_income_rank_state_2018 <- as.numeric(income_county_ns$personal_income_rank_state_2018)
+
+view(income_county_ns)
+
 #income_county_ns <- income_county_ns[-c(2906, 2908, 2910, 2909, 2912, 2913, 2914), ]
 
-income_county_ns <- income_county_ns %>%
-  mutate(ID_2 = seq.int(nrow(income_county_ns)))
+#income_county_ns <- income_county_ns %>%
+  #mutate(ID_2 = seq.int(nrow(income_county_ns)))
+view(income_county_ns)
 
 ic_2016 <- income_county_ns %>%
-  select(county, personal_income_2016) %>%
+  select(abb_county, personal_income_2016) %>%
   rename(
     "y" = personal_income_2016
   )
 
 ic_2017 <- income_county_ns %>%
-  select(county, personal_income_2017) %>%
+  select(abb_county, personal_income_2017) %>%
   rename(
     "y" = personal_income_2017
   )
 
 ic_2018 <- income_county_ns %>%
-  select(county, personal_income_2018) %>%
+  select(abb_county, personal_income_2018) %>%
   rename(
     "y" = personal_income_2018
   )
 
 ic_rank_2018 <- income_county_ns %>%
-  select(county, personal_income_rank_state_2018) %>%
+  select(abb_county, personal_income_rank_state_2018) %>%
   rename(
     "y" = personal_income_rank_state_2018
   )
 
-ic_2016 %>%
-  filter(county == "Autauga") %>%
-  ggplot(aes(county, y)) + geom_line()
-                                                                               
-
-pres_income <- inner_join(pres_results_reg, income_county_ns)
+pres_income <- full_join(pres_results_reg, income_county_ns)
 
 pres_income %>%
-  filter(state == "Alabama") %>%
-  ggplot(aes(personal_income_2016, totalvotes)) + geom_point()
+  lm(formula = totalvotes ~ personal_income_2016) %>%
+  tidy(conf.int = TRUE)
 
-# ggplot(regression, aes(personal_income_2016, totalvotes, color = county)) + geom_col()
-  
 
 ```
 
@@ -234,21 +235,45 @@ county_pop <- read_csv("raw_data/estimated_county_population.csv") %>%
   clean_names()
 
 county_pop <- county_pop %>%
-  select(c(ctyname, popestimate2016))
+  select(c(stname, ctyname, popestimate2016))
 
-county_pop <- county_pop[-c(329, 560),] #2867, 2868, 2871, 2878, 2880, 2887, 2889, 2894, 2897, 2901, 2904,
+# county_pop <- county_pop[-c(329, 560),] #2867, 2868, 2871, 2878, 2880, 2887, 2889, 2894, 2897, 2901, 2904,
                             #2908, 2910, 2919, 2923, 2926, 2927, 2928, 2929, 2934, 2935),]
 
 county_pop <- county_pop %>%
-  mutate(ID_2 = seq.int(nrow(county_pop))) %>%
-  dplyr::rename("county_c" = ctyname)
+  dplyr::rename("county_c" = ctyname,
+                "state" = stname)
   
 
 pres_income <- pres_income %>%
   mutate(county_c = paste0(county, " County"))
 
-regression <- inner_join(county_pop, income_county_ns)
+regression <- full_join(county_pop, pres_income, by = c("county_c", "state")) 
 
+regression <- regression %>%
+  drop_na() %>%
+  mutate(percent_votes = totalvotes/popestimate2016) %>%
+  mutate(county_state = paste0(county_c, ", ", state)) %>%
+  filter(! county_state == "Richmond County, Virginia")
+
+regression %>%
+  lm(formula = totalvotes ~ personal_income_2016) %>%
+  tidy(conf.int = TRUE)
+
+
+ggplot(regression, aes(percent_votes, totalvotes)) + geom_point()
+
+regression_log <- regression %>%
+  mutate(log_totalvotes = log(totalvotes), log_personal_income_2016 = log(personal_income_2016))
+
+regression_log %>%
+  ggplot(aes(log_personal_income_2016, log_totalvotes, color = personal_income_rank_state_2018)) + geom_point() +
+  geom_smooth(method = "lm")
+
+regression_log
+
+regression %>%
+  arrange(desc(percent_votes))
 
 ```
 
@@ -275,38 +300,158 @@ regression <- inner_join(county_pop, income_county_ns)
 ```{r}
 health <- read.csv("raw_data/health_data_2016.csv") %>%
   clean_names() %>%
-  select(! 3:6)
+  select(! 3:6) %>%
+  filter(! qualifying_name == "Geo_QNAME") %>%
+  rename("county_state" = qualifying_name,
+         "county_c" = name_of_area)
+
+health[,3:29] <- sapply(health[,3:29],as.numeric)
+
+health[,1:2] <- sapply(health[,1:2], as.character)
+
+health_18_punhealthy <- health %>% select(c(county_state, physically_unhealthy_days_per_month_persons_18_years_and_over)) %>%
+  rename("y" = physically_unhealthy_days_per_month_persons_18_years_and_over)
+
+health_18_munhealthy <- health %>% select(c(county_state, mentally_unhealthy_days_per_month_persons_18_years_and_over)) %>%
+  rename("y" = mentally_unhealthy_days_per_month_persons_18_years_and_over)
+
+health_18_pctfairpoor <- health %>% select(c(county_state, percent_of_adults_that_report_fair_or_poor_health_persons_18_years_and_over)) %>%
+  rename("y" = percent_of_adults_that_report_fair_or_poor_health_persons_18_years_and_over)
+
+health_primary_phys <- health %>% select(c(county_state, primary_care_physicians_pcp)) %>%
+  rename("y" = primary_care_physicians_pcp)
+
+health_primary_phys_rate <- health %>% select(c(county_state, primary_care_physicians_pcp_rate_per_100_000_population)) %>%
+  rename("y" = primary_care_physicians_pcp_rate_per_100_000_population)
+
+health_dentists <- health %>% select(c(county_state, dentists)) %>%
+  rename("y" = dentists)
+
+health_dentists_rate <- health %>% select(c(county_state, dentists_rate_per_100_000_population)) %>%
+  rename("y" = dentists_rate_per_100_000_population)
+
+health_costs_adjusted_medicare <- health %>% select(c(county_state, health_care_costs_price_adjusted_medicare_reimbursements)) %>%
+  rename("y" = health_care_costs_price_adjusted_medicare_reimbursements)
+
+health_percent_woinsurance_under19 <- health %>% select(c(county_state, percent_of_persons_without_insurance_population_under_19_years_2013_est)) %>%
+  rename("y" = percent_of_persons_without_insurance_population_under_19_years_2013_est)
+
+health_percent_woinsurance_18_64 <- health %>% select(c(county_state, percent_of_persons_without_insurance_population_18_to_64_years_2013_est)) %>%
+  rename("y" = percent_of_persons_without_insurance_population_18_to_64_years_2013_est)
+
+health_infant_mortality <- health %>% select(c(county_state, infant_mortality_death_counts)) %>%
+  rename("y" = infant_mortality_death_counts)
+
+health_child_mortality <- health %>% select(c(county_state, child_mortality_death_counts)) %>%
+  rename("y" = child_mortality_death_counts)
+
+health_pct_smokers <- health %>% select(c(county_state, percent_current_smokers_persons_18_years_and_over)) %>%
+  rename("y" = percent_current_smokers_persons_18_years_and_over)
+
+health_pct_drinking <- health %>% select(c(county_state, percent_drinking_adults_persons_18_years_and_over)) %>%
+  rename("y" = percent_drinking_adults_persons_18_years_and_over)
+
+health_food_environmental_index <- health %>% select(c(county_state, food_environment_index)) %>%
+  rename("y" = food_environment_index)
 
 
 
 ```
+## Regression with heatlth
+
+```{r}
+
+
+# Test <- tibble(county_state = regression$county_state, Test = regression)
+
+#health <- tibble(health)
+
+#regression_full <- full_join(as_tibble(regression), as_tibble(health), by = "county_state")
+
+
+
+```
+
+
 
 ## State Education Data 2018
 
 ```{r}
 
-education <- read.csv("raw_data/state_education_data_2018.csv") %>%
-  clean_names() %>%
-  select(! 3:7)
+health_insurance <- read.csv("raw_data/health_insurance.csv", stringsAsFactors = FALSE) %>%
+  clean_names()
 
-# sapply(education, numeric)
+colnames(health_insurance) <- health_insurance[1,]
 
-education$school_digger_number_of_stars_elementary <- as.numeric(education$school_digger_number_of_stars_elementary)
-education$school_digger_number_of_stars_high <- as.numeric(education$school_digger_number_of_stars_high)
-education$school_digger_number_of_stars_middle <- as.numeric(education$school_digger_number_of_stars_middle)
-education$school_digger_rank_elementary <- as.numeric(education$school_digger_rank_elementary)
-education$school_digger_rank_high <- as.numeric(education$school_digger_rank_high)
-education$school_digger_rank_middle <- as.numeric(education$school_digger_rank_middle)
-education$school_digger_rank_of_elementary <- as.numeric(education$school_digger_rank_of_elementary)
-education$school_digger_rank_of_high <- as.numeric(education$school_digger_rank_of_high)
-education$school_digger_rank_of_middle <- as.numeric(education$school_digger_rank_of_middle)
-education$number_of_all_students_no_value_means_redacted <- as.numeric(education$number_of_all_students_no_value_means_redacted)
+health_insurance <- health_insurance[-1, ] 
 
-education <- education[2:52,]
-education %>% filter(qualifying_name == "Connecticut") %>%
-ggplot(aes(qualifying_name, school_digger_number_of_stars_elementary)) + geom_col()
+health_insurance <- health_insurance[, c(2, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53)]
+
+health_insurance <- health_insurance %>%
+  rename(
+    "county_state" = 'Geographic Area Name',
+    "total" = 'Estimate!!Total',
+    "total_under25k" = 'Estimate!!Total!!Under $25,000',
+    "total_under25k_with_hi" = 'Estimate!!Total!!Under $25,000!!With health insurance coverage',
+    "total_under25k_with_private" = 'Estimate!!Total!!Under $25,000!!With health insurance coverage!!With private health insurance',
+    "total_under25k_with_public" = 'Estimate!!Total!!Under $25,000!!With health insurance coverage!!With public coverage',
+    "total_under25k_none" = 'Estimate!!Total!!Under $25,000!!No health insurance coverage',
+    "total_25k_49k" = 'Estimate!!Total!!$25,000 to $49,999',
+    "total_25k_49k_with_hi" = 'Estimate!!Total!!$25,000 to $49,999!!With health insurance coverage',
+    "total_25k_49k_with_private" = 'Estimate!!Total!!$25,000 to $49,999!!With health insurance coverage!!With private health insurance',
+    "total_25k_49k_with_public" = 'Estimate!!Total!!$25,000 to $49,999!!With health insurance coverage!!With public coverage',
+    "total_25k_49k_none" = 'Estimate!!Total!!$25,000 to $49,999!!No health insurance coverage',
+    "total_50k_74k" = 'Estimate!!Total!!$50,000 to $74,999',
+    "total_50k_74k_with_hi" = 'Estimate!!Total!!$50,000 to $74,999!!With health insurance coverage',
+    "total_50k_74k_with_private" = 'Estimate!!Total!!$50,000 to $74,999!!With health insurance coverage!!With private health insurance',
+    "total_50k_74k_with_public" = 'Estimate!!Total!!$50,000 to $74,999!!With health insurance coverage!!With public coverage',
+    "total_50k_74k_none" = 'Estimate!!Total!!$50,000 to $74,999!!No health insurance coverage',
+    "total_75k_99k" = 'Estimate!!Total!!$75,000 to $99,999',
+    "total_75k_99k_with_hi" = 'Estimate!!Total!!$75,000 to $99,999!!With health insurance coverage',
+    "total_75k_99k_with_private" = 'Estimate!!Total!!$75,000 to $99,999!!With health insurance coverage!!With private health insurance',
+    "total_75k_99k_with_public" = 'Estimate!!Total!!$75,000 to $99,999!!With health insurance coverage!!With public coverage',
+    "total_75k_99k_none" = 'Estimate!!Total!!$75,000 to $99,999!!No health insurance coverage',
+    "total_100k" = 'Estimate!!Total!!$100,000 or more',
+    "total_100k_with_hi" = 'Estimate!!Total!!$100,000 or more!!With health insurance coverage',
+    "total_100k_with_private" = 'Estimate!!Total!!$100,000 or more!!With health insurance coverage!!With private health insurance',
+    "total_100k_with_public" = 'Estimate!!Total!!$100,000 or more!!With health insurance coverage!!With public coverage',
+    "total_100k_none" = 'Estimate!!Total!!$100,000 or more!!No health insurance coverage'
+  )
+
+health_insurance$total <- as.numeric(health_insurance$total)
+health_insurance$total_under25k <- as.numeric(health_insurance$total_under25k)
+health_insurance$total_under25k_none <- as.numeric(health_insurance$total_under25k_none)
+health_insurance$total_under25k_with_hi <- as.numeric(health_insurance$total_under25k_with_hi)
+health_insurance$total_under25k_with_private <- as.numeric(health_insurance$total_under25k_with_private)
+health_insurance$total_under25k_with_public <- as.numeric(health_insurance$total_under25k_with_public)
+health_insurance$total_25k_49k <- as.numeric(health_insurance$total_25k_49k)
+health_insurance$total_25k_49k_with_hi <- as.numeric(health_insurance$total_25k_49k_with_hi)
+health_insurance$total_25k_49k_with_public <- as.numeric(health_insurance$total_25k_49k_with_public)
+health_insurance$total_25k_49k_with_private <- as.numeric(health_insurance$total_25k_49k_with_private)
+health_insurance$total_25k_49k_none <- as.numeric(health_insurance$total_25k_49k_none)
+health_insurance$total_50k_74k <- as.numeric(health_insurance$total_50k_74k)
+health_insurance$total_50k_74k_with_hi <- as.numeric(health_insurance$total_50k_74k_with_hi)
+health_insurance$total_50k_74k_with_public <- as.numeric(health_insurance$total_50k_74k_with_public)
+health_insurance$total_50k_74k_with_private <- as.numeric(health_insurance$total_50k_74k_with_private)
+health_insurance$total_50k_74k_none <- as.numeric(health_insurance$total_50k_74k_none)
+health_insurance$total_75k_99k <- as.numeric(health_insurance$total_75k_99k)
+health_insurance$total_75k_99k_with_hi <- as.numeric(health_insurance$total_75k_99k_with_hi)
+health_insurance$total_75k_99k_with_private <- as.numeric(health_insurance$total_75k_99k_with_private)
+health_insurance$total_75k_99k_with_public <- as.numeric(health_insurance$total_75k_99k_with_public)
+health_insurance$total_75k_99k_none <- as.numeric(health_insurance$total_75k_99k_none)
+health_insurance$total_100k <- as.numeric(health_insurance$total_100k)
+health_insurance$total_100k_with_hi <- as.numeric(health_insurance$total_100k_with_hi)
+health_insurance$total_100k_with_private <- as.numeric(health_insurance$total_100k_with_private)
+health_insurance$total_100k_with_public <- as.numeric(health_insurance$total_100k_with_public)
+health_insurance$total_100k_none <- as.numeric(health_insurance$total_100k_none)
+
+
+
 
 ```
+
+
+
 
 ## Family Voting Registration by Age and Income 2016
 
@@ -385,7 +530,13 @@ grad_ed <- grad_ed %>%
   ) %>%
   select(c(school_district, year, percent))
 
-grad_ed
+grad_ed$percent <- as.numeric(grad_ed$percent)
+
+grad_ed$year <- as.numeric(grad_ed$year)
+
+grad_ed %>%
+  filter(school_district == "Massachusetts") %>%
+  ggplot(aes(year, percent)) + geom_line()
 
 
 ```
