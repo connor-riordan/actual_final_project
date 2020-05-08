@@ -106,6 +106,10 @@ grad_ed <- grad_ed %>%
   ) %>%
   select(c(school_district, year, percent))
 
+grad_ed$percent <- as.numeric(grad_ed$percent)
+
+grad_ed$year <- as.numeric(grad_ed$year)
+
 saveRDS(object = grad_ed, file = "final_project/rds/grad_ed.RDS")
 
 income_county <- read_excel("raw_data/per_capita_income_by_county.xlsx") %>%
@@ -186,26 +190,30 @@ income_county_ns <- income_county %>%
   drop_na() %>%
   mutate(abb_county = paste0(county, ", ", state_po))
 
+income_county_ns$personal_income_2016 <- as.numeric(income_county_ns$personal_income_2016)
+
+income_county_ns$personal_income_rank_state_2018 <- as.numeric(income_county_ns$personal_income_rank_state_2018)
+
 ic_2016 <- income_county_ns %>%
-  select(county, personal_income_2016) %>%
+  select(abb_county, personal_income_2016) %>%
   rename(
     "y" = personal_income_2016
   )
 
 ic_2017 <- income_county_ns %>%
-  select(county, personal_income_2017) %>%
+  select(abb_county, personal_income_2017) %>%
   rename(
     "y" = personal_income_2017
   )
 
 ic_2018 <- income_county_ns %>%
-  select(county, personal_income_2018) %>%
+  select(abb_county, personal_income_2018) %>%
   rename(
     "y" = personal_income_2018
   )
 
 ic_rank_2018 <- income_county_ns %>%
-  select(county, personal_income_rank_state_2018) %>%
+  select(abb_county, personal_income_rank_state_2018) %>%
   rename(
     "y" = personal_income_rank_state_2018
   )
@@ -220,8 +228,126 @@ saveRDS(object = ic_2018, file = "final_project/rds/ic_2018.RDS")
 
 saveRDS(object = ic_rank_2018, file = "final_project/rds/ic_rank_2018.RDS")
 
+pres_income <- full_join(pres_results_reg, income_county_ns)
 
+pres_income <- pres_income %>%
+  mutate(county_c = paste0(county, " County"))
 
+saveRDS(object = pres_income, file = "final_project/rds/pres_income.RDS")
 
+county_pop <- read_csv("raw_data/estimated_county_population.csv") %>%
+  clean_names()
+
+county_pop <- county_pop %>%
+  select(c(stname, ctyname, popestimate2016))
+
+county_pop <- county_pop %>%
+  dplyr::rename("county_c" = ctyname,
+                "state" = stname)
+
+saveRDS(object = county_pop, file = "final_project/rds/county_pop.RDS")
+
+regression <- full_join(county_pop, pres_income, by = c("county_c", "state")) 
+
+regression <- regression %>%
+  drop_na() %>%
+  mutate(percent_votes = totalvotes/popestimate2016) %>%
+  mutate(county_state = paste0(county_c, ", ", state)) %>%
+  filter(! county_state == "Richmond County, Virginia")
+
+saveRDS(object = regression, file = "final_project/rds/regression.RDS")
+
+regression_log <- regression %>%
+  mutate(log_totalvotes = log(totalvotes), log_personal_income_2016 = log(personal_income_2016))
+
+saveRDS(object = regression_log, file = "final_project/rds/regression_log.RDS")
+
+health <- read.csv("raw_data/health_data_2016.csv") %>%
+  clean_names() %>%
+  select(! 3:6) %>%
+  filter(! qualifying_name == "Geo_QNAME") %>%
+  rename("county_state" = qualifying_name,
+         "county_c" = name_of_area)
+
+health[,3:29] <- sapply(health[,3:29],as.numeric)
+
+health[,1:2] <- sapply(health[,1:2], as.character)
+
+saveRDS(object = health, file = "final_project/rds/health.RDS")
+
+health_18_punhealthy <- health %>% select(c(county_state, physically_unhealthy_days_per_month_persons_18_years_and_over)) %>%
+  rename("y" = physically_unhealthy_days_per_month_persons_18_years_and_over)
+
+saveRDS(object = health_18_punhealthy, file = "final_project/rds/health_18_punhealthy.RDS")
+
+health_18_munhealthy <- health %>% select(c(county_state, mentally_unhealthy_days_per_month_persons_18_years_and_over)) %>%
+  rename("y" = mentally_unhealthy_days_per_month_persons_18_years_and_over)
+
+saveRDS(object = health_18_munhealthy, file = "final_project/rds/health_18_munhealthy.RDS")
+
+health_18_pctfairpoor <- health %>% select(c(county_state, percent_of_adults_that_report_fair_or_poor_health_persons_18_years_and_over)) %>%
+  rename("y" = percent_of_adults_that_report_fair_or_poor_health_persons_18_years_and_over)
+
+saveRDS(object = health_18_pctfairpoor, file = "final_project/rds/helath_18_pctfairpoor.RDS")
+
+health_primary_phys <- health %>% select(c(county_state, primary_care_physicians_pcp)) %>%
+  rename("y" = primary_care_physicians_pcp)
+
+saveRDS(object = health_primary_phys, file = "final_project/rds/health_primary_phys.RDS")
+
+health_primary_phys_rate <- health %>% select(c(county_state, primary_care_physicians_pcp_rate_per_100_000_population)) %>%
+  rename("y" = primary_care_physicians_pcp_rate_per_100_000_population)
+
+saveRDS(object = health_primary_phys_rate, file = "final_project/rds/health_primary_phys_rate.RDS")
+
+health_dentists <- health %>% select(c(county_state, dentists)) %>%
+  rename("y" = dentists)
+
+saveRDS(object = health_dentists, file = "final_project/rds/health_dentists.RDS")
+
+health_dentists_rate <- health %>% select(c(county_state, dentists_rate_per_100_000_population)) %>%
+  rename("y" = dentists_rate_per_100_000_population)
+
+saveRDS(object = health_food_environmental_index, file = "final_project/rds/health_dentists_rate.RDS")
+
+health_costs_adjusted_medicare <- health %>% select(c(county_state, health_care_costs_price_adjusted_medicare_reimbursements)) %>%
+  rename("y" = health_care_costs_price_adjusted_medicare_reimbursements)
+
+saveRDS(object = health_costs_adjusted_medicare, file = "final_project/rds/health_costs_adjusted_medicare.RDS")
+
+health_percent_woinsurance_under19 <- health %>% select(c(county_state, percent_of_persons_without_insurance_population_under_19_years_2013_est)) %>%
+  rename("y" = percent_of_persons_without_insurance_population_under_19_years_2013_est)
+
+saveRDS(object = health_percent_woinsurance_under19, file = "final_project/rds/health_percent_woinsurance_under19.RDS")
+
+health_percent_woinsurance_18_64 <- health %>% select(c(county_state, percent_of_persons_without_insurance_population_18_to_64_years_2013_est)) %>%
+  rename("y" = percent_of_persons_without_insurance_population_18_to_64_years_2013_est)
+
+saveRDS(object = health_percent_woinsurance_18_64, file = "final_project/rds/health_percent_woinsurance_18_64.RDS")
+
+health_infant_mortality <- health %>% select(c(county_state, infant_mortality_death_counts)) %>%
+  rename("y" = infant_mortality_death_counts)
+
+saveRDS(object = health_infant_mortality, file = "final_project/rds/health_infant_mortality.RDS")
+
+health_child_mortality <- health %>% select(c(county_state, child_mortality_death_counts)) %>%
+  rename("y" = child_mortality_death_counts)
+
+saveRDS(object = health_child_mortality, file = "final_project/rds/health_child_mortality.RDS")
+
+health_pct_smokers <- health %>% select(c(county_state, percent_current_smokers_persons_18_years_and_over)) %>%
+  rename("y" = percent_current_smokers_persons_18_years_and_over)
+
+saveRDS(object = health_pct_smokers, file = "final_project/rds/health_pct_smokers.RDS")
+
+health_pct_drinking <- health %>% select(c(county_state, percent_drinking_adults_persons_18_years_and_over)) %>%
+  rename("y" = percent_drinking_adults_persons_18_years_and_over)
+
+saveRDS(object = health_pct_drinking, file = "final_project/rds/health_pct_drinking.RDS")
+
+health_food_environmental_index <- health %>% select(c(county_state, food_environment_index)) %>%
+  rename("y" = food_environment_index)
+
+saveRDS(object = health_food_environmental_index, file = "final_project/rds/health_food_environmental_index.RDS")
 
 

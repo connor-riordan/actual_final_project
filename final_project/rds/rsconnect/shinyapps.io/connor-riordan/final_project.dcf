@@ -1,0 +1,12 @@
+name: final_project
+title: final_project
+username:
+account: connor-riordan
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2193416
+bundleId: 3070956
+url: https://connor-riordan.shinyapps.io/final_project/
+when: 1587980385.00223
+asMultiple: FALSE
+asStatic: FALSE

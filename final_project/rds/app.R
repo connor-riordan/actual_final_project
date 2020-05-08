@@ -1,10 +1,20 @@
 
 
 library(shiny)
+library(readr)
 library(tidyverse)
-library(markdown)
+library(dplyr)
+library(janitor)
 library(ggplot2)
-library(base)
+library(gt)
+library(skimr)
+library(tidyr)
+library(broom)
+library(lubridate)
+library(patchwork)
+library(scales)
+library(markdown)
+library(shinythemes)
 
 # I needed to use this space in order to read in all of my RDS data so I can
 # use it all in my shiny app.
@@ -67,6 +77,42 @@ grad_ed <- readRDS("grad_ed.RDS")
 
 districtasvector <- grad_ed$school_district %>% unique()
 
+regression <- readRDS("regression.RDS")
+
+regression_log <- readRDS("regression_log.RDS")
+
+health <- readRDS("health.RDS")
+
+health_18_munhealthy <- readRDS("health_18_munhealthy.RDS")
+
+health_18_punhealthy <- readRDS("health_18_punhealthy.RDS")
+
+helath_child_mortality <- readRDS("health_child_mortality.RDS")
+
+health_costs_adjusted_medicare <- readRDS("health_costs_adjusted_medicare.RDS")
+
+health_dentists <- readRDS("health_dentists.RDS")
+
+health_dentists_rate <- readRDS("health_dentists_rate.RDS")
+
+health_food_environmental_index <- readRDS("health_food_environmental_index.RDS")
+
+health_infant_mortality <- readRDS("health_infant_mortality.RDS")
+
+health_pct_drinking <- readRDS("health_pct_drinking.RDS")
+
+health_pct_smokers <- readRDS("health_pct_smokers.RDS")
+
+health_percent_woinsurance_18_64 <- readRDS("health_percent_woinsurance_18_64.RDS")
+
+health_percent_woinsurance_under19 <- readRDS("health_percent_woinsurance_under19.RDS")
+
+health_primary_phys <- readRDS("health_primary_phys.RDS")
+
+health_primary_phys_rate <- readRDS("health_primary_phys_rate.RDS")
+
+health_18_pctfairpoor <- readRDS("helath_18_pctfairpoor.RDS")
+
 options(scipen = 999)
 
 # For this first part of my shiny, I wanted to allow people to compare how 
@@ -75,7 +121,7 @@ options(scipen = 999)
 # I used a comparative bar plot and a line plot in order to best represent
 # this.
 
-ui <- navbarPage(
+ui <- navbarPage(theme = shinytheme("cosmo"),
   
     "How Separate Variables Affect Voting Patterns",
   
@@ -99,17 +145,15 @@ ui <- navbarPage(
                                       
                                       mainPanel(
                                         
-                                        plotOutput("voting_data"),
-                                        
-                                        br(), br(),
-                                        
-                                        tableOutput("results"),
-                                        
-                                        plotOutput("lpd"),
-                                        
-                                        br(), br(),
-                                        
-                                        tableOutput("results2"))))),
+                                        fluidRow(
+                                          
+                                          splitLayout(
+                                            
+                                            style = "border: 1px solid silver:", cellWidths = c(600, 600),
+                                            
+                                            plotOutput("voting_data"),
+                                            
+                                            plotOutput("lpd"))))))),
                          
                          tabPanel("Explanation"),
                          
@@ -223,19 +267,28 @@ ui <- navbarPage(
                                     
                                     mainPanel(
                                       
-                                      plotOutput("education"),
+                                      fluidRow(
+                                        
+                                        splitLayout(
+                                          
+                                          style = "border: 1px solid silver:", cellWidths = c(700, 700),
+                                          
+                                          plotOutput("education"),
+                                          
+                                          #tableOutput("results5"),
+                                          
+                                          plotOutput("education2")
+                                          
+                                          #tableOutput("results6")
+                                          
+                                        )
+                                        
+                                      )
                                       
-                                      br(), br(),
-                                      
-                                      tableOutput("results5"),
-                                      
-                                      plotOutput("education2"),
-                                      
-                                      br(), br(),
-                                      
-                                      tableOutput("results6")
                                     ))),
+               
                tabPanel("Explanation",
+                        
                         p("Education is the gateway to becoming more sophisticated, smarter, and learning how to play your part as an American citizen
                           and a citizen of the world. If a particular school district suffers due to a lack of education funding, then people are likely
                           to assume that students that graduate from (or don't graduate from) that district will be less likely to vote in elections,
@@ -246,16 +299,101 @@ ui <- navbarPage(
                         ))
     )),
 
+    tabPanel("Health",
+             
+             tabsetPanel(
+               
+               tabPanel("Health Data",
+                        
+                        fluidPage(
+                          
+                          sidebarLayout(
+                            
+                            helpText("Examine Health Data."),
+                            
+                            fluidRow(selectizeInput("county_state", "Choose a county:", choices = health$county_state, options = list("actions-box" = TRUE), multiple = TRUE),
+                                     selectInput("health_select", "Choose a variable to measure:", choices = c(`18+ Mentally Unhealthy Days per Month` = "health_18_munhealthy",
+                                                                                                               `18+ Physically Unhealthy Days per Month` = "health_18_punhealthy",
+                                                                                                               `Child Mortality Rate` = "health_child_mortality",
+                                                                                                               `Infant Mortality Rate` = "health_infant_mortality",
+                                                                                                               `Health Costs Adjusted for Medicare Payments` = "health_costs_adjusted_medicare",
+                                                                                                               `Number of Dentists` = "health_dentists",
+                                                                                                               `Food Environmental Index` = "health_food_environmental_index",
+                                                                                                               `18+ Drinking Rate` = "health_pct_drinking",
+                                                                                                               `18+ Smoking Rate` = "health_pct_smokers",
+                                                                                                               `Percent Without Insurance 18-64` = "health_percent_woinsurance_18_64",
+                                                                                                               `Percent Without Insurance Under 19` = "health_percent_woinsurance_under19",
+                                                                                                               `Primary Physicians` = "health_primary_phys",
+                                                                                                               `Percent of 18+ Population reporting either fair or poor health` = "health_18_pctfairpoor")
+                                                 ))),
+                          sidebarLayout(
+                            
+                            helpText("Population per County (For Reference)."),
+                            
+                            fluidRow(selectizeInput("select_county_state", "Choose a County:", choices = regression$county_state, options = list("actions-box" = TRUE), multiple = TRUE))
+                          
+                            ),
+                            
+                          mainPanel(
+                              
+                              fluidRow(
+                                
+                                splitLayout(
+                                  
+                                  style = "border: 1px solid silver:", cellWidths = c(600, 600),
+                                  
+                                  plotOutput("health"),
+                                  
+                                  tableOutput("population_stats")
+                              ))
+                            )
+                          
+                        ))
+             )),
+
     tabPanel("Regression",
              
-             p("Unfortunately, I am still working on cleaning the data for the regression. It has taken me hours and hours and I am still not done, so please
-               forgive me :(
+             tabsetPanel(
                
-               What I plan to do for the regression is examine income and total votes in 2016, since I am able to combine those two data sets. If I can do something
-               similar with health and education, I will do my best to. I predict that the income will show a positive correlation with total votes (i.e. the more
-               money you have, the more likely you are to vote, which tuus increases the number of total votes.")
-             
-             ),
+               tabPanel("Regression Visualizations",
+                        
+                        sliderInput("population", "Population Range:",
+                                    min = 117, max = 10105708,
+                                    value = c(1000,10000)),
+                        
+                        mainPanel(
+                          
+                          fluidRow(
+                            
+                            splitLayout(
+                              
+                              style = "border: 1px solid silver:", cellWidths = c(600, 600, 600),
+                              
+                              plotOutput("regression_log"),
+                              
+                              plotOutput("regression"),
+                              
+                              tableOutput("reg_table")
+                              
+                            )
+                          )
+                        )),
+               
+               tabPanel("Explanation",
+                        
+                        h3("[this] regression title"),
+                        
+                        p("Insert [this] explanation here, ya dummy."),
+                        
+                        h3("[that] regression title"),
+                        
+                        p("Insert [that] explanation here."),
+                        
+                        h3("[the other] regression title"),
+                        
+                        p("Insert [the other] explanation here.")
+                        
+               ))),
     
     tabPanel("Discussion",
              
@@ -321,7 +459,8 @@ server <- function(input, output) {
     })
     
     output$lpd <- renderPlot({
-        pres_res %>%
+        
+      pres_res %>%
             
             filter(abb_county %in% input$county) %>%
             
@@ -338,7 +477,8 @@ server <- function(input, output) {
                 x = "County",
                 
                 y = "Total Votes"
-            )
+                
+            ) + theme(legend.position = "none")
     })
     
     output$income <- renderPlot({
@@ -370,9 +510,9 @@ server <- function(input, output) {
         
         incomevars %>%
           
-          filter(county %in% input$in_county) %>%
+          filter(abb_county %in% input$in_county) %>%
           
-          ggplot(aes(county, y, fill = county)) +
+          ggplot(aes(abb_county, y, fill = abb_county)) +
           
           geom_bar(stat = "identity", position = position_dodge()) +
           
@@ -427,8 +567,85 @@ server <- function(input, output) {
           x = "Year",
           
           y = "Percent"
-        )
           
+        ) + theme(legend.position = "none")
+          
+    })
+    
+    output$health <- renderPlot({
+      
+      health_select <- get(input$health_select)
+      
+      health_select %>%
+        
+        filter(county_state %in% input$county_state) %>%
+        
+        ggplot(aes(county_state, y, fill = county_state)) + geom_bar(stat = "identity", position = position_dodge())
+      
+    })
+    
+    output$population_stats <- renderTable({
+      
+      regression %>%
+        
+        filter(county_state %in% input$select_county_state) %>%
+        
+        select(c(county_state, popestimate2016)) %>%
+        
+        dplyr::rename("County" = county_state,
+               
+               "Population Estimate 2016" = popestimate2016)
+      
+    })
+    
+    output$regression_log <- renderPlot({
+      
+      regression_log %>%
+        
+        filter(popestimate2016 >= input$population[1],
+               
+               popestimate2016 <= input$population[2]) %>%
+        
+        ggplot(aes(log_personal_income_2016, log_totalvotes, color = percent_votes)) + geom_point() +
+        
+        geom_smooth(method = "lm")
+      
+    })
+    
+    output$regression <- renderPlot({
+      
+      regression %>%
+        
+        filter(popestimate2016 >= input$population[1],
+               
+               popestimate2016 <= input$population[2]) %>%
+        
+        ggplot(aes(personal_income_2016, totalvotes, color = percent_votes)) + geom_point() +
+        
+        geom_smooth(method = "lm")
+      
+    })
+    
+    output$reg_table <- renderTable({
+      
+      regression %>%
+        
+        filter(popestimate2016 >= input$population[1],
+               
+               popestimate2016 <= input$population[2]) %>%
+        
+        lm(formula = totalvotes ~ personal_income_2016 * percent_votes) %>%
+        
+        tidy(conf.int = TRUE) %>%
+        
+        select(term, estimate, conf.low, conf.high) %>%
+        
+        mutate(estimate = round(estimate, digits = 2),
+               
+               conf.low = round(conf.low, digits = 2),
+               
+               conf.high = round(conf.high, digits = 2))
+      
     })
     
 # I wanted to insert an image because I haven't made a video yet!
