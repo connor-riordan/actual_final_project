@@ -1,18 +1,13 @@
 
-
 library(shiny)
 library(readr)
 library(tidyverse)
-library(dplyr)
 library(janitor)
-library(ggplot2)
 library(gt)
 library(skimr)
-library(tidyr)
 library(broom)
-library(lubridate)
 library(patchwork)
-library(scales)
+library(lubridate)
 library(markdown)
 library(shinythemes)
 
@@ -58,9 +53,9 @@ edasvector <- education$name_of_area %>% unique()
 
 # This breaks down the income for each individual county.
 
-incomeasvector <- income_county_ns$abb_county
-
 income_county_ns <- readRDS("income_county_ns.RDS")
+
+incomeasvector <- income_county_ns$abb_county
 
 ic_2016 <- readRDS("ic_2016.RDS")
 
@@ -155,17 +150,24 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
                                             
                                             plotOutput("lpd"))))))),
                          
-                         tabPanel("Explanation"),
+                      tabPanel("Explanation"),
                          
                          h3("Why these graphs?"),
                          
                          p("The first of these two graphs offers people the opportunity to compare the voting patterns of different counties
-                           across the United States. Later on, I examine how income, education, and health each impact the total number of votes
-                           cast in 2016.
+                           across the United States. Later on, I examine how income has an impact the total number of votes
+                           cast in 2016. The first graph allows you to see how many votes each county cast for each presidential candidate for
+                           the last five presidential elections."),
                            
-                           The secong graph is a line graph charting the change in the total number of votes cast by the selected counties for the
-                           last five presidential elections, which is useful for informing us how outside variables have impacted voting growth
-                           (or lack thereof).")
+                          p("The secong graph is a line graph charting the change in the total number of votes cast by the selected counties for the
+                           last five presidential elections. It is useful to be able to compare counties to see if voter turnout is increasing or
+                           decreasing, and where that is happening. Being able to examine each county individually is a useful tool to see where we
+                           need to focus our efforts in order to bolster voter participation."),
+                           
+                          p("When we combine these two graphs, this offers some insight into both 1) how each county voted in the last five presidential
+                           elections, 2) how many votes were cast for each candidate, and 3) if the county is seeing increased or decreased voter
+                           turnout over time. This can be used as a resource for both democratic and republican strategists to determine where they should
+                           focus their efforts come election season.")
                          
                          )),
     
@@ -233,13 +235,23 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
                
                tabPanel("Explanation",
                         
-                        p("It is a fact that people of a higher socioeconomic status are more likely to vote in elections. There are several possible
-                          reasons for this, including a lack of reliable transportation, a lack of education, and needing to work long
-                          hours. In this section of my project, I produced two graphs. The first looks at income brackets for the United States as a
-                          whole, and how each of these classes votes. The second graph gives us the opportunity to examine income on a per-county basis,
-                          which is useful for determining why certain counties may have higher turnout than others."
+                        h3("Why include income?"),
+                        
+                        p("The first set of income statistics looks at the United States as a whole, and specifically on how many people 
+                          of each income class (in their sample) voted in 2016. Comparing the data side-by-side seems to indicate that
+                          people who are of a higher income bracket were more likely to voe in the 2016 presidential election."),
                           
-                        )))),
+                        p("The second set of income statistics gives up the opportunity to examine individual personal income by county.
+                          Apart from voting, we can use these statistics to see where poverty hits hardest in the United States. In terms of
+                          voting, this graph can be combined with the other set of income statistics because we can see which counties fall
+                          into which income bracket, and we can extrapolate from there which counties had higher voter turnouts."),
+                          
+                         p("Judging by these two sets of data, we can reasonably predict that 
+                          people of a higher socioeconomic status are more likely to vote in elections. There could be several possible
+                          reasons for this, including a lack of reliable transportation, a lack of education, and needing to work long
+                          hours.")
+                          
+                        ))),
     
 # This education data is not fantastic, so I have downloaded some more to make
 # up for that. My new education data focuses mainly on the graduation rates
@@ -262,7 +274,7 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
                                       
                                       fluidRow(selectInput("year2", "Choose a year:", choices = grad_ed$year),
                                                
-                                               selectizeInput("school_district", "Choose a school district:", choices = districtasvector, options = list("actions-box" = TRUE), multiple = TRUE),
+                                               selectizeInput("school_district", "Choose a school district:", choices = districtasvector, options = list("actions-box" = TRUE), multiple = TRUE)
                                       )),
                                     
                                     mainPanel(
@@ -289,12 +301,12 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
                
                tabPanel("Explanation",
                         
-                        p("Education is the gateway to becoming more sophisticated, smarter, and learning how to play your part as an American citizen
-                          and a citizen of the world. If a particular school district suffers due to a lack of education funding, then people are likely
-                          to assume that students that graduate from (or don't graduate from) that district will be less likely to vote in elections,
-                          thereby decreasing voter turnout for that particular state. This particular set of education data gives us the graduation rate of
-                          every school district across the country. I wanted to give people another opportunity to compare different school districts in
-                          different states/counties so we can see how education may impact voting."
+                        h3("Why include education?"),
+                        
+                        p("Attending school gives us the ability to broaden our horizons, become more educated on various issues, and learn how to play our part as an American citizen
+                          and a citizen of the world. If students never get the opportunity to learn how to be an American citizen, then it is much less likely that they will vote.
+                          This is why I decided to examine the graduation rate of school districts across the country to determine where we need to focus our efforts. I think that it will
+                          be incredibly useful to afford people the opportunity to compare different school districts across the country."
                           
                         ))
     )),
@@ -312,15 +324,15 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
                             helpText("Examine Health Data."),
                             
                             fluidRow(selectizeInput("county_state", "Choose a county:", choices = health$county_state, options = list("actions-box" = TRUE), multiple = TRUE),
-                                     selectInput("health_select", "Choose a variable to measure:", choices = c(`18+ Mentally Unhealthy Days per Month` = "health_18_munhealthy",
-                                                                                                               `18+ Physically Unhealthy Days per Month` = "health_18_punhealthy",
+                                     selectInput("health_select", "Choose a variable to measure:", choices = c(`18+ Mentally Unhealthy Days per Month Percent` = "health_18_munhealthy",
+                                                                                                               `18+ Physically Unhealthy Days per Month Percent` = "health_18_punhealthy",
                                                                                                                `Child Mortality Rate` = "health_child_mortality",
                                                                                                                `Infant Mortality Rate` = "health_infant_mortality",
                                                                                                                `Health Costs Adjusted for Medicare Payments` = "health_costs_adjusted_medicare",
                                                                                                                `Number of Dentists` = "health_dentists",
                                                                                                                `Food Environmental Index` = "health_food_environmental_index",
-                                                                                                               `18+ Drinking Rate` = "health_pct_drinking",
-                                                                                                               `18+ Smoking Rate` = "health_pct_smokers",
+                                                                                                               `18+ Drinking Rate Percent` = "health_pct_drinking",
+                                                                                                               `18+ Smoking Rate Percent` = "health_pct_smokers",
                                                                                                                `Percent Without Insurance 18-64` = "health_percent_woinsurance_18_64",
                                                                                                                `Percent Without Insurance Under 19` = "health_percent_woinsurance_under19",
                                                                                                                `Primary Physicians` = "health_primary_phys",
@@ -333,14 +345,14 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
                             fluidRow(selectizeInput("select_county_state", "Choose a County:", choices = regression$county_state, options = list("actions-box" = TRUE), multiple = TRUE))
                           
                             ),
-                            
+                          
                           mainPanel(
                               
                               fluidRow(
                                 
                                 splitLayout(
                                   
-                                  style = "border: 1px solid silver:", cellWidths = c(600, 600),
+                                  style = "border: 1px solid silver:", cellWidths = c(800, 600),
                                   
                                   plotOutput("health"),
                                   
@@ -348,14 +360,29 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
                               ))
                             )
                           
+                          
+                        )),
+               
+               tabPanel("Explanation",
+                        
+                        h3("Why include health?"),
+                        
+                        p("Health is another factor of life that helps determine if someone will be able to vote come election time.
+                          Feeling secure in your health insurance provider is essential, and every American should have access to 
+                          health insurance. This set of data allows you to (once again) take a look at any county in the United States
+                          across multiple different avenues of health. It gives people the opportunity to compare counties and again see
+                          where we need to focus our efforts."
+                          
+                          
                         ))
+               
              )),
 
     tabPanel("Regression",
              
              tabsetPanel(
                
-               tabPanel("Regression Visualizations",
+               tabPanel("Regression Visualizations - Income on Voting",
                         
                         sliderInput("population", "Population Range:",
                                     min = 117, max = 10105708,
@@ -369,9 +396,9 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
                               
                               style = "border: 1px solid silver:", cellWidths = c(600, 600, 600),
                               
-                              plotOutput("regression_log"),
-                              
                               plotOutput("regression"),
+                              
+                              plotOutput("regression_log"),
                               
                               tableOutput("reg_table")
                               
@@ -381,34 +408,43 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
                
                tabPanel("Explanation",
                         
-                        h3("[this] regression title"),
+                        h3("Explanation for the first graph"),
                         
-                        p("Insert [this] explanation here, ya dummy."),
+                        p("For each of these two graphs, I wanted to see how the regression would change depending on how big the population
+                          was, since county populations vary extremely widely. The first graph shows the relationship between total personal income
+                          for 2016 plotted against the total number of votes cast in the 2016 election. I colored each of the points by the percentage
+                          of the people that voted in each county. The data shown in this graph is extremely clustered to one side, so I decided to log
+                          both the independent and the dependent variable to make the graph easier to comprehend."),
                         
-                        h3("[that] regression title"),
+                        h3("Explanation for the second graph"),
                         
-                        p("Insert [that] explanation here."),
+                        p("The second graph is the first graph, but the independent and dependent variables are both logged. Now that the graph is much
+                          easier to read, we can look at the regression line. When we move the sliders, we can see that for the vast majority of the population
+                          sizes, the regression line has a positive slope. What this indicates is that as a person's individual income increases, the total
+                          number of votes cast increases as well, something that is demonstrated in the regression table as well. This is essentially what
+                          we have seen earlier on in the project, where a higher income level is generally equated to casting more votes. However, when you look
+                          at just counties with lower populations, the regression line can actually become negative. However, this is only when you look at a small
+                          subset of counties, and it doesn't discount the finding that greater income is equated with a greater number of votes."),
                         
-                        h3("[the other] regression title"),
+                        h3("Explanation for the regression table"),
                         
-                        p("Insert [the other] explanation here.")
+                        p("Like the graphs, the values of this regression table change when you move the slider to select the population. As shown in the graphs,
+                          the effect of personal income on voting almost always has a positive slope. For the sake of our collective sanity, I will explain the 
+                          outcome of the regression table when we look at the population of the United States as a whole. For this regression table, obviously we can't
+                          have negative votes in an election. However, moving from that point onwards we can say that for every one unit increase in personal income,
+                          the total votes will increase by 17.37 votes. Every time the percent vote in the US increases by one unit, the total votes will increase
+                          by 792,491.30 votes. Interestingly, when we look at the interplay between personal income for 2016 and the percentage vote for 2016, we can see
+                          that there is a negative relationship between the two, meaning that as the personal income of an area increases, the percentage of the population
+                          that votes actually decreases. This is not what I was expecting, and it is a very interesting outcome considering the estimate was positive for
+                          both personal income and percent votes on their own."),
+                        
+                        h3("Is there anything else we should know?"),
+                        
+                        p("Unfortunately, I was unable to combine my dataset on health with my dataset containing the votes for presidential elections and income statistics
+                          for each county, so I was unable to run a regression on that data. It is something I hope to fix in the future, since I believe running a
+                          regression on that information could yield some very interesting and insightful results.")
                         
                ))),
-    
-    tabPanel("Discussion",
-             
-             titlePanel("Connor, enlighten us."),
-             
-             p("Most of the models I used for my project were interactive bar graphs. The thing I had in mind the most during
-               the creation of this project was how to let people compare different areas. I think it's really
-               great to be able to compare different counties against one another, so you can look not just at a
-               per-state basis but on an even more specific level. Using selectizeInput allows you to select which
-               counties you want to compare with one another.
-               
-               The data I chose to use was presidential election results, education, and income. None of this data is
-               new, but I think presenting it in an interactive way helps illustrate how disparities in education and 
-               income affects voting patterns across states and counties.")),
-    
     
     tabPanel("About",
              
@@ -421,6 +457,19 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
                lay it out in an easily digestible form so people of every background can understand the severity 
                of the situation we face in this country."),
              
+             p("Most of the models I used for my project were interactive bar graphs. I knew that when I made this
+               project I really wanted to let people compare different areas of the United States against one another,
+               which I think is incredibly valuable since you can look at different kinds of data not just on a
+               per-state basis but on an even more specific level. I think that added specificity helps narrow the focus
+               so we can truly see what areas need help and what areas are doing ok."),
+             
+             p("Since I was not able to compare all the data I found with voting statistics, the purpose of this project
+               has another function: to examine areas of the United Sates that are suffering in terms of voter participation,
+               income, education, and health. I think that while the central idea of this project is to see how these areas
+               possibly impact voting, I grew to thinking that this project is a good method for exploring and comparing 
+               different counties to see where we can improve in all of these areas and where we need to focus our attention
+               in the future."),
+             
              h3("About Me"),
              
              p("My name is Connor Riordan and I am looking to study Government and TDM. 
@@ -428,7 +477,7 @@ ui <- navbarPage(theme = shinytheme("cosmo"),
              
              mainPanel(imageOutput("image"))
              
-             )
+    )
 )
 
 # These are all the outputs for my data.
@@ -453,7 +502,9 @@ server <- function(input, output) {
                 
                 x = "County",
                 
-                y = "Number of Votes for Each Candidate"
+                y = "Number of Votes for Each Candidate",
+                
+                fill = "County Color"
             )
         
     })
@@ -471,8 +522,6 @@ server <- function(input, output) {
             theme_bw() + labs(
                 
                 title = "Change in Total Votes by County, 2000-2016",
-                
-                color = "County",
                 
                 x = "County",
                 
@@ -499,7 +548,9 @@ server <- function(input, output) {
                 
                 x = "Income Bracket",
                 
-                y = "Number Reported Voted"
+                y = "Number Reported Voted",
+                
+                fill = "Income Bracket Color"
             )
         
     })
@@ -522,7 +573,9 @@ server <- function(input, output) {
             
             x = "County",
             
-            y = "Personal Income/Ranking"
+            y = "Personal Income/Ranking",
+            
+            fill = "County Color"
           )
       
     })
@@ -545,7 +598,9 @@ server <- function(input, output) {
           
           x = "School District",
           
-          y = "Percent"
+          y = "Percent",
+          
+          fill = "School District Color"
         )
         
     })
@@ -580,7 +635,19 @@ server <- function(input, output) {
         
         filter(county_state %in% input$county_state) %>%
         
-        ggplot(aes(county_state, y, fill = county_state)) + geom_bar(stat = "identity", position = position_dodge())
+        ggplot(aes(county_state, y, fill = county_state)) + geom_bar(stat = "identity", position = position_dodge()) +
+        
+        labs(
+          
+          title = "Health Data for Counties Across the United States",
+          
+          x = "County",
+          
+          y = "Health Variable",
+          
+          fill = "County Color"
+          
+        )
       
     })
     
@@ -608,7 +675,13 @@ server <- function(input, output) {
         
         ggplot(aes(log_personal_income_2016, log_totalvotes, color = percent_votes)) + geom_point() +
         
-        geom_smooth(method = "lm")
+        geom_smooth(method = "lm") + labs(
+          title = "How Personal Income Affects the Total Number of Votes Cast in the 2016 Presidential Election",
+          subtitle = "Both IV and DV Are Logged",
+          x = "Personal Income 2016",
+          y = "Total Votes 2016",
+          color = "Percent of Population that Voted"
+        )
       
     })
     
@@ -622,7 +695,12 @@ server <- function(input, output) {
         
         ggplot(aes(personal_income_2016, totalvotes, color = percent_votes)) + geom_point() +
         
-        geom_smooth(method = "lm")
+        geom_smooth(method = "lm") + labs(
+          title = "How Personal Income Affects the Total Number of Votes Cast in the 2016 Presidential Election",
+          x = "Personal Income 2016",
+          y = "Total Votes 2016",
+          color = "Percent of Population that Voted"
+        )
       
     })
     
